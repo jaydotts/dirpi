@@ -2,21 +2,24 @@
 // Methods to control components that are less time-sensitive, 
 // such as digipot, DACs, and ADC. 
 
+// May include classes for all components as a matter of consistency, 
+// but will define important values locally on startup to preserve efficiency.
+
 #include "components.h"
 // Need to manage the libraries that are included here 
 
 #include <iostream> 
 using namespace std; 
 
+// I2C Devices: 
+
 ////////////////////////////////////// Bias DACs 
+BiasDAC::BiasDAC(const int chan){ 
+    channel = chan; 
 
-// constructor: parameterize with channel value
-BiasDAC::BiasDAC(const int chan){
-    chan = chan; 
-
-    if (chan == 1)
+    if (channel == 1)
         addr = 0x4c; 
-    else if (chan == 2)
+    else if (channel == 2)
         addr = 0x4d;
     
     DACfd = wiringPiI2CSetup(addr);
@@ -28,20 +31,18 @@ void BiasDAC::PrintBias(){
 }
 
 void BiasDAC::SetVoltage(int voltage){
-
     if (voltage < 0) voltage = 0; 
     if (voltage > 255) voltage = 255; 
     BiasVoltage = voltage; 
 }
 
-
 ////////////////////////////////////// Threshold DACs
-ThrDac::ThrDac(const int chan){
-    chan = chan; 
+ThrDac::ThrDAC(const int chan){
+    channel = chan; 
 
-    if (chan == 1)
+    if (channel == 1)
         addr = 0x60; 
-    else if (chan == 2)
+    else if (channel == 2)
         addr = 0x61;
     
     DACfd = wiringPiI2CSetup(addr);
@@ -70,3 +71,40 @@ void ThrDAC::SetThr(int voltage, int persist){
     wiringPiI2CWriteReg8(DACfd, data[0], data[1]);
 }
 
+////////////////////////////////////// DIGIPOT
+DIGIPOT::DIGIPOT(){
+    addr = 0x2c; 
+}
+
+////////////////////////////////////// ADC
+I2CADC::I2CADC(){
+    addr = 0x48; 
+}
+
+////////////////////////////////////// MUX
+MUX::MUX(const int chan){ 
+    channel = chan; 
+}
+
+////////////////////////////////////// EEPROM
+EEPROM::EEPROM(){
+    addr = 0x50; 
+}
+
+////////////////////////////////////// DIGIO
+DIGIO::DIGIO(const int chan){
+    channel = chan; 
+}
+
+////////////////////////////////////// IO
+IO::IO(){
+    addr = 0x21; 
+}
+
+void IO::SetClock(int speed){
+    // set En20 or En40 high 
+    // (not both) to select the clock. 
+}
+
+
+// Non-I2C Devices: 

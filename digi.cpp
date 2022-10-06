@@ -101,7 +101,7 @@ int printScalers = 100; // Prescale for calculating/displaying scalers
 
 int trgCnt[2][2]; // Results of all Trg1Cnt and Trg2Cnt reads. First number is channel, second number is current (0) and previous (1) values
 double scalars[2];
-bool checkScalars[2]; 
+bool checkScalars[2];
 uint16_t nSLWCLK = 0;
 
 chrono::high_resolution_clock::time_point t0[2];
@@ -112,6 +112,7 @@ bool is_file_exist(const char *filename)
  return infile.good();
 }
 
+// Define addresses for read/write of I2C components 
 #define WRITEDAC 0x40
 #define WRITEDACEEPROM 0x60 //0x50?
 #define Thr1DACAddr 0x60
@@ -916,7 +917,9 @@ int main(int argc, char* argv[]){
 
 /////////////////////////////////// MAKE CHANGES HERE //////////////////////////////////
  
+ // Enable software/external triggers 
   digitalWrite(TrgExtEn,1);
+  // Enable ch1 and ch2 triggers 
   digitalWrite(Trg1En,1);
   digitalWrite(Trg2En,1);
   
