@@ -18,12 +18,14 @@ g++ -O digi.cpp -o digi -lwiringPi
 
 
 ## Installation
+Software requirements can be found in ***requirements.txt***. 
 
 ## Usage  
-The digitizer driver software is split into _ translation units: 
+The digitizer driver software is split into (?) translation units: 
 - ***components.h***: class definitions for all board components
 - ***components.cpp***: implementations of all board components 
-- ***io.cpp***: functions for fast read/write of component data 
+- ***io.cpp***: methods for fast read/write of component data
+- ***test.cpp***: self-test routines 
 
 ## Support
 
