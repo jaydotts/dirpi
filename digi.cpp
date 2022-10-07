@@ -623,6 +623,7 @@ void WriteData()
 
 void StartSampling()
 {
+  // start filling SRAM with ADC outputs 
   eventNum++;
   for (int i=0; i<100; i++) ToggleSlowClock();
   digitalWrite(SLWCLK,1);
@@ -802,20 +803,21 @@ void TakeCosmicData(int nEvents) {
 }
 
 
-void TakeData(int nEvents, bool isRandom=false) {
+void TakeData(int nEvents, bool isRandom=false) {// Better than ReadRandomEvents
+// takes a set of events 
   int i{0};
   //random DAQ
   // Read randomly triggered events and dump them to the screen.
   
   if (nEvents <= 0) return;
   
-  auto t_now = std::chrono::high_resolution_clock::now();
+  auto t_now = std::chrono::high_resolution_clock::now(); // record time at beginning of data collection
   t0[0] = t_now;
   t0[1] = t_now;
   bool scl;
   
   while (i<nEvents) {
-	StartSampling();
+	StartSampling();//clear DAQHalt to enable sampling again 
     delayMicroseconds(150); 
     if (isRandom)     SoftwareTrigger();
     
@@ -823,16 +825,17 @@ void TakeData(int nEvents, bool isRandom=false) {
       delayMicroseconds(2);
     }
     
+    // hold DAQHalt high to stop sampling 
     digitalWrite(DAQHalt,1);
     digitalWrite(DAQHalt,1);
     digitalWrite(DAQHalt,1);
 	
 	
 	scl = (i%printScalers==0) ? 1 : 0;
-    ReadAllData(scl);
+    ReadAllData(scl);//read SRAM 
     WriteData();
     //if (i%10==0) {
-	ifstream p("stop");
+	ifstream p("stop");// if "stop" file exists -> stop sampling
 	if(p.good()) { remove("stop"); exit(0); }
 	//}
     i++;    

@@ -1,5 +1,13 @@
 
 
+void SoftwareTrigger()
+{
+  digitalWrite(SFTTRG,1);
+  //digitalWrite(SFTTRG,1);
+  //digitalWrite(SFTTRG,1);
+  digitalWrite(SFTTRG,0);
+}
+
 void TestTrgThr(int chan) // Test the setting of the trigger threshold
 {
   // Vary the trigger threshold so it can be monitored on the scope
@@ -8,6 +16,21 @@ void TestTrgThr(int chan) // Test the setting of the trigger threshold
     SetTriggerThreshold(chan, voltage, 0);
     delayMicroseconds(10000);
   } // Loop over voltage    
+}
+
+int IsTriggered() {
+  for (int i=0; i<100; i++)
+   if (ReadPin(OEbar) == 1) return 0;
+  return 1; 
+}
+
+void ToggleSlowClock() // Toggle the slow clock down then up
+{
+ // Repeat twice to avoid rare errors.
+ digitalWrite(SLWCLK,1);
+ digitalWrite(SLWCLK,1);
+ digitalWrite(SLWCLK,0);
+ digitalWrite(SLWCLK,0);
 }
 
 void TestSLWCLK()
@@ -30,21 +53,16 @@ void TestSLWCLK()
   }
 }
 
-void CheckForSRAMErrors(int nEvent)
-{  
-  // Repeatedly read the same event and check for discrepancies
-  if (nEvent<=0) return;
-  cout << "Checking for SRAM errors...\n";
-  for(int i=0; i<2000; i++) {
-    cout << "\rEvent "<<i<<" ";cout.flush();
-    StartSampling();
-    delayMicroseconds(20);
-    SoftwareTrigger();
-    while (ReadPin(OEbar)==0) {
-      delayMicroseconds(2);
-    }
-    digitalWrite(DAQHalt,1);
-    ReadAllData();
-    ReReadAllData(); // Check for errors
-  }
+void ResetCounters() // Reset the address counters
+{
+ if (debug) {cout << "Reseting the address counters.\n"; cout.flush();}
+ // Toggle high then low.
+ // Repeat to avoid rare failures.
+ digitalWrite(MR,1);
+ digitalWrite(MR,1);
+ digitalWrite(MR,1);
+ digitalWrite(MR,1);
+ digitalWrite(MR,0);
+ digitalWrite(MR,0);
+ digitalWrite(MR,0);
 }
