@@ -18,7 +18,7 @@
 
 #include <chrono>
 #include "Adafruit_ADS1015.h"
-#include "PCA9554.hpp"
+//#include "PCA9554.hpp"
 using namespace std;
 
 // Define useful names for the GPIO pins and the wiringPi interface to them.
@@ -403,6 +403,7 @@ void ReadData() // Read the 16 data bits into the global variable array
    dataCH2 += dataBits[1][i]*datascale;
    datascale *= 2;
   }
+  //cout<<dataCH1<<" "<<dataCH2<<endl;
 }
 
 void ReReadAllData()
@@ -577,10 +578,10 @@ void WriteData()
       iMax2 = i;
     }
   }
-  
+  int scale = (3300/255);
   if (eventNum%saveWaveforms == 0 || eventNum<10){
     for (int i=0; i<4096; i++) {
-       fprintf(OutputFileW, "DATA: %i  %i %i %i\n", eventNum, i, dataBlock[0][i],dataBlock[1][i]);//"%x ",dataBlock[i]); //write to separate file
+       fprintf(OutputFileW, "DATA: %i  %i %i %i\n", eventNum, i, dataBlock[0][i]*scale,dataBlock[1][i]*scale);//"%x ",dataBlock[i]); //write to separate file
      //plot waveform
     }
   }
@@ -952,7 +953,7 @@ int main(int argc, char* argv[]){
   cout<<"Reading ADC AIN2: "<<ReadADC(2)<<endl;
   cout<<"Reading ADC AIN3: "<<ReadADC(3)<<endl;
   if(configOnly){ return 0;}
-  TakeData(nEvents, false);//TakeCosmicData(10000); // Set the number of events here// true for random triggering, false for normal triggering  
+  TakeData(nEvents, true);//TakeCosmicData(10000); // Set the number of events here// true for random triggering, false for normal triggering  
     
   // ReadRandomEvents(10000);
   // TestTrigLatch(1000); // Specialized tests for probing trigger latch

@@ -3,6 +3,7 @@
 
 #ifndef COMPONENT_H 
 #define COMPONENT_H
+#endif 
 
 #include <iostream>
 #include <wiringPi.h>
@@ -15,104 +16,120 @@ using namespace std;
 class BiasDAC{
     //DAC5571IDBVR
     private: 
-        const int channel; 
-        const unsigned addr; 
-        const unsigned DACfd; 
+        int channel; 
+        unsigned addr; 
+        unsigned DACfd; 
         int BiasVoltage; 
 
     public: 
-        BiasDAC(const int chan); 
+        BiasDAC( int chan); 
         void SetVoltage(int voltage); 
+        void PrintBias();
         ~BiasDAC();
 
-}
+};
 
 class ThrDAC{
     //MCP4725A0T-E/CH
 
     // This component has its own EEPROM (?)
     private: 
-        const int channel; 
-        const unsigned addr; 
-        const unsigned DACfd; 
+          int channel; 
+         unsigned addr; 
+         unsigned DACfd; 
         int ThrVoltage; 
 
     public: 
-        ThrDAC(const int chan); 
-        void SetThr(int voltage); 
+        ThrDAC( int chan); 
+        void SetThr(int voltage, int persist); 
         ~ThrDAC();
-}
+};
 
 class DIGIPOT{
     //MCP4451-503E/ST
     private:
-        const unsigned addr;
-        int OffsetVoltage; // set a default val? 
+         unsigned addr;
+         unsigned fd; 
+         double RMax = 50000.0; // Max resistance of DIGIPOT in Ohms 
+
+        // DC offsets of each channel in mV 
+        double offsetCH1 = 0; 
+        double offsetCH2 = 0;
+
+        // Resistance values for each channel 
+        // (in order to set DC offset)
+        int RCH1 = 0; 
+        int RCH2 = 0; 
     
     public: 
         DIGIPOT(); 
-        void SetVoltage(); 
-        ~DIGIPOT(); 
-}
+        void SetVoltage(int chan, double voltage); 
+        //~DIGIPOT(); 
+};
 
 class I2CADC{
     //ADS1115IDGSR
     private:
-        const unsigned addr;
+         unsigned addr;
     
     public: 
         I2CADC(); 
         ~I2CADC(); 
-}
+};
 
 class EEPROM{
     //M24C64-RMN6TP
     private:
         // add wPi addr
-        const unsigned addr;
+         unsigned addr;
     
     public: 
         EEPROM(); 
         ~EEPROM(); 
-}
+};
 
 class DIGIO{
     //PCA9554APW,118
     private: 
         // add Pi handle + wPi addr
-        const int channel; 
-        const unsigned addr; 
-        const unsigned DIGIOfd; 
+         int channel; 
+         unsigned addr; 
+         unsigned DIGIOfd; 
     
     public:
-        DIGIO(const int chan);
+        DIGIO( int chan);
         ~DIGIO();
-}
+};
+
 
 class IO{
     //TCA6408ARGTR
     //IO expander used to select clock
     private: 
-        const unsigned addr; 
+         unsigned addr; 
     
     public: 
         IO(); 
         void SetClock(int speed); 
         ~IO(); 
-}
+};
 
 // Non-I2C Devices: 
 class MUX{
     private:
-        const int channel; 
+         int channel; 
     
     public: 
-        MUX(const int chan); 
+        MUX( int chan); 
         ~MUX(); 
-}
+};
 
 class SRAM{
     //CY7C1021DV33-10ZSXIT
+    private: 
+        void restart();
+    
     public: 
-        restart();
-}
+        SRAM();
+        ~SRAM();
+};

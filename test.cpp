@@ -146,7 +146,6 @@ int ReadPin(int iPin) {
 // Clear address counters 
 void ADRCounterClear()
 {
- if (debug) {cout << "Reseting the address counters.\n"; cout.flush();}
  // Toggle high then low.
  // Repeat to avoid rare failures.
  digitalWrite(MR,1);
@@ -334,6 +333,8 @@ void MUXRead(){
     // Load data bit of multiplexer (now holding the proper bits) from CH1 and CH2
     bitsMX1[MUXbit] = ReadPin(MX1Out);
     bitsMX2[MUXbit] = ReadPin(MX2Out);
+    //cout<<"MX1Out:"<<bitsMX1[MUXbit]<<endl;
+    //cout<<"MX2Out:"<<bitsMX2[MUXbit]<<endl;
 
   }
 
@@ -360,7 +361,7 @@ void MUXRead(){
   dataCH2 = 0;
 
   // write data values to dataCH1 and dataCH2 bit by bit, advancing through them one at a time
-  
+
   int binscale = 1; // binary scaling factor for each bit
   for (int i=0; i<8; i++) {
     // append value of scaled bit to dataCH1 and dataCH2 as 8-bit binary numbers
@@ -375,9 +376,8 @@ void SRAMRead(){
 
   // i: number of bins (samples) cycled through. = 4096
   for (int i=0; i<addressDepth; i++){
-    ToggleSlowClock(); // toggle slow clock hi-lo, so that it will advance forward on a high input
+    ToggleSlowClock(); // toggle slow clock hi-lo, so that it will advance adress forward on a high input
     MUXRead(); // read the 16 bits from the multiplexer for this event 
-
     // load location in the SRAM data block with this byte of data into databits 
     dataBlock[0][i] = dataCH1;
 		dataBlock[1][i] = dataCH2;
@@ -407,7 +407,7 @@ void printV( std::vector<double> const &a){
   }
 }
 
-void WriteData(double scale)
+void WriteData()
 {
   FILE *OutputFile, *OutputFileW;
   char data_buffer[50], data_bufferW[50];
@@ -447,20 +447,20 @@ void WriteData(double scale)
   int iMax1 = 0;
   int iMax2 = 0;
   for (int i=0; i<addressDepth; i++) {
-    if (dataBlock[0][i]*scale > max1) {
+    if (dataBlock[0][i] > max1) {
       iMax1 = i;
-      max1 = dataBlock[0][i]*scale;
+      max1 = dataBlock[0][i];
     }
-    if (dataBlock[1][i]*scale > max2) {
-      max2 = dataBlock[1][i]*scale;
+    if (dataBlock[1][i] > max2) {
+      max2 = dataBlock[1][i];
       iMax2 = i;
     }
   }
   
-  if (eventNum%saveWaveforms == 0 || eventNum<10){
+  if (eventNum%saveWaveforms == 0 || eventNum<100){
     for (int i=0; i<4096; i++) {
-      int CH1reading = dataBlock[0][i]*scale; 
-      int CH2reading = dataBlock[1][i]*scale;
+      int CH1reading = dataBlock[0][i]; 
+      int CH2reading = dataBlock[1][i];
 
        fprintf(OutputFileW, "DATA: %i  %i %i %i\n", eventNum, i, CH1reading, CH2reading);//"%x ",dataBlock[i]); //write to separate file
      //plot waveform
@@ -514,8 +514,7 @@ void TestSoftwareTrigger(int nEvents, bool isRandom = false){
 
   // wait for events 
   int i = 0; 
-  double scale = (3300.0/255.0); 
-  cout<<"scale:"<<scale<<endl;
+
   while(i<nEvents){
   
     StartSampling(); // reset counters + pull DAQHalt low 
@@ -533,12 +532,13 @@ void TestSoftwareTrigger(int nEvents, bool isRandom = false){
     digitalWrite(DAQHalt,1);
     digitalWrite(DAQHalt,1);
     digitalWrite(DAQHalt,1);
+    //cout<< "DAQHalt is :"<< (digitalRead(DAQHalt) ? "high" : "low") << endl;
 
     // Read SRAM into dataBlock
     SRAMRead();
 
     // Write data to file 
-    WriteData(scale);
+    WriteData();
     eventNum++;
     i++;
 
@@ -546,6 +546,41 @@ void TestSoftwareTrigger(int nEvents, bool isRandom = false){
   }
 
   cout<<"Data collection completed"<<endl;
+}
+
+void SRAMTestReadWrite(int nEvents){
+
+  // Set DAQHalt low to enable Write mode on SRAM
+  StartSampling();
+
+  delayMicroseconds(150);
+
+  int bitsMX1[8];
+  int bitsMX2[8];
+
+  // Clear each bit manually
+  cout<<"clearing bits"<<endl;
+  for (int MUXbit = 0; MUXbit<8; MUXbit++){
+    MUXSelectBits(MUXbit);
+    digitalWrite(MX1Out,0);
+    digitalWrite(MX2Out,0);
+
+    cout<<digitalRead(MX1Out)<<endl;;
+    cout<<digitalRead(MX2Out)<<endl;
+  }
+
+    delayMicroseconds(2);  
+
+    cout<<"Activating SRAM read mode"<<endl; 
+
+    digitalWrite(DAQHalt,1);
+    digitalWrite(DAQHalt,1);
+    digitalWrite(DAQHalt,1);
+
+    SRAMRead();
+
+    WriteData();
+
 }
 
 int main(int argc, char* argv[]){
@@ -583,19 +618,9 @@ int main(int argc, char* argv[]){
   pwmWrite(PSCL, PSCLduty);
   cout<<"PWM duty cycle: "<<int(100*PSCLduty/1024)<<"%"<<endl;
 
-  int bias_mV = 0; 
-
-  int bias = (bias_mV*4096.0)/3300.0;
-
-  cout<<"Setting bias on CH1 to "<<double((3.3*bias)/4.096)<<"mV"<<endl;
-  SetBias(1,bias,0);
-
-  cout<<"Setting bias on CH2 to "<<double((3.3*bias)/4.096)<<"mV"<<endl;
-  SetBias(2,bias,0);
-
   cout<<"Testing software trigger"<<endl; 
   TestSoftwareTrigger(1000,true);
-
+  //SRAMTestReadWrite(1000);
   return 0;
 
 }
