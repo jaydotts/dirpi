@@ -81,73 +81,33 @@ DIGIPOT::DIGIPOT(){
     if (fd == -1) cerr<<"Unable to setup device at "<<addr<<endl;
 };
 
-void DIGIPOT::SetVoltage(int chan, double voltage){
-    // Set DC offset (voltage) in mV to 
-    // channel 1 or 2 (chan) input 
-    // by adjusting the digipot wiper
+// Write N (0-255) to wiper on digipot channel 
+void DIGIPOT::SetWiper(int chan, int N){
 
-    //TODO: buiild in value checking for max/min voltages
-    if(voltage >= 3300.0) voltage = 3299.0; // prevent NANing
+    if(N>256) N=255;
+    if(N<0) N=0;
 
-    if (chan == 1){
-        // Theoretical resistance of wiper determined by voltage divider equation
-        double R_ideal = 75000.0*(1/((3300.0/voltage)-1)); 
-        if (R_ideal > RMax) R_ideal = RMax; 
+    unsigned int wiper_reg; 
+    // Select wiper memory register based on desired channel
+    switch(chan){
+        case 1: 
+            wiper_reg = 0x00;
+            break;
+        case 2: 
+            wiper_reg = 0x10;
+            break;
+        case 3:
+            wiper_reg = 0x60;
+            break;
+        case 4: 
+            wiper_reg = 0x70;
+            break;
+    } 
 
-        cout<<"Requested Resistance: "<<R_ideal<<endl;
-        // determine value of wiper "steps"
-
-        unsigned N = round(((R_ideal-75.0)*256.0)/RMax);
-        cout<<"N:"<<N<<endl;
-        
-        
-        //unsigned int write_byte = ((N >> 8 & 0x01));
-        unsigned int wiper_reg = 0x00;
-
-        // first, tell pot to write next byte to register 0x00: 
-        uint8_t write_cmd = ((N >> 8 & 0x01) | 0x00); // this is sent to the wiper register: says "enter write mode"
-        wiringPiI2CWriteReg8(fd, wiper_reg, write_cmd);
-        unsigned int write_byte = (N & 0xFF);
-        int result = wiringPiI2CWriteReg8(fd,wiper_reg,write_byte);
-
-        RCH1 = RMax*N/256.0;
-
-        cout<<"Wiper resistance setting:"<<RCH1<<"/50000"<<endl;
-        // Calculate offset accurate to precision of the wiper 
-        int true_offset = (RCH1/(RCH1+75000.0))*3300.0;
-        cout<<"CH1 offset: "<<true_offset<<"mV"<<endl;
-    };
-
-    if (chan == 2){
-          // Theoretical resistance of wiper determined by voltage divider equation
-        double R_ideal = 75000.0*(1/((3300.0/voltage)-1)); 
-        if (R_ideal > RMax) R_ideal = RMax; 
-
-        cout<<"Requested Resistance: "<<R_ideal<<endl;
-        // determine value of wiper "steps"
-
-        unsigned N = round(((R_ideal-75.0)*256.0)/RMax);
-        cout<<"N:"<<N<<endl;
-        
-        
-        //unsigned int write_byte = ((N >> 8 & 0x01));
-        unsigned int wiper_reg = 0x01;
-
-        // first, tell pot to write next byte to register 0x00: 
-        uint8_t write_cmd = ((N >> 8 & 0x01) | 0x00); // this is sent to the wiper register: says "enter write mode"
-
-        wiringPiI2CWriteReg8(fd, 0x01, write_cmd);
-        
-        unsigned int write_byte = (N & 0xFF);
-        //int result = wiringPiI2CWriteReg8(fd,wiper_reg,write_byte);
-
-        RCH2 = RMax*N/256.0;
-
-        cout<<"Wiper resistance setting:"<<RCH2<<"/50000"<<endl;
-        // Calculate offset accurate to precision of the wiper 
-        int true_offset = (RCH2/(RCH2+75000.0))*3300.0;
-        cout<<"CH2 offset: "<<true_offset<<"mV"<<endl;
-};
+    // Write N (0-255) to wiper memory. I 
+    unsigned int write_byte = (N & 0xFF);
+    int result = wiringPiI2CWriteReg8(fd,wiper_reg,write_byte);
+    cout<<"Writing N="<<N<<" to channel "<<chan<<" "<< (result ? "Failed" : "Succeeded")<<endl;
 };
 
 ////////////////////////////////////// ADC

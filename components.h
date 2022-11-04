@@ -63,7 +63,7 @@ class DIGIPOT{
     
     public: 
         DIGIPOT(); 
-        void SetVoltage(int chan, double voltage); 
+        void SetWiper(int chan, int N); 
         //~DIGIPOT(); 
 };
 
