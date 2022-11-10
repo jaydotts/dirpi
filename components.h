@@ -65,6 +65,7 @@ class DIGIPOT{
         DIGIPOT(); 
         void SetWiper(int chan, int N); 
         void setInputBias(int chan, double voltage); 
+        int test();
 
 };
 
@@ -133,4 +134,8 @@ class SRAM{
     public: 
         SRAM();
         ~SRAM();
+};
+
+class CLOCK{        
+
 };

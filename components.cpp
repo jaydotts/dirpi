@@ -73,8 +73,8 @@ DIGIPOT::DIGIPOT(){
 // Write N (0-255) to wiper on digipot channel 
 void DIGIPOT::SetWiper(int chan, int N){
 
-    if(N>256) N=255;
-    if(N<0) N=0;
+    if(N>=256) N=255;
+    if(N<=0) N=0;
 
     unsigned int wiper_reg; 
     // Select wiper memory register based on desired channel
@@ -112,9 +112,14 @@ void DIGIPOT::setInputBias(int chan, double voltage){
         return;
     }
     // calculate resistance to achieve desired offset 
-    int N = round(256 - voltage/3.37); // this is a hack, not math 
+
+    int N = round((16*(2003*3300 - 5003*voltage))/(125*(3300-voltage))); 
     cout<<N<<endl;
     SetWiper(chan, N); 
+}
+
+int DIGIPOT::test(){
+    // full test of digipot critical features 
 }
 
 ////////////////////////////////////// ADC
