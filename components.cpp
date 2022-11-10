@@ -6,7 +6,6 @@
 // but will define important values locally on startup to preserve efficiency.
 
 #include "components.h"
-#include "pigpiod_if2.h"
 // Need to manage the libraries that are included here 
 
 #include <iostream> 
@@ -61,16 +60,6 @@ void ThrDAC::SetThr(int voltage, int persist){
     // MCP4725 expects a 12bit data stream in two bytes (2nd & 3rd of transmission)
     data[0] = (DACval >> 8) & 0xFF; // [0 0 0 0 D11 D10 D9 D8] (first bits are modes for our use 0 is fine)
     data[1] = DACval; // [D7 D6 D5 D4 D3 D2 D1 D0]
-
-      // 1st byte is the register
-    //if (persist) {
-     //   wiringPiI2CWrite(DACfd, WRITEDACEEPROM);
-    //} else {
-    //wiringPiI2CWrite(DACfd, addr);
-    //}
-
-    // Send our data using the register parameter as our first data byte
-    // this ensures the data stream is as the MCP4725 expects
     wiringPiI2CWriteReg8(DACfd, data[0], data[1]);
 };
 
@@ -109,6 +98,24 @@ void DIGIPOT::SetWiper(int chan, int N){
     int result = wiringPiI2CWriteReg8(fd,wiper_reg,write_byte);
     cout<<"Writing N="<<N<<" to channel "<<chan<<" "<< (result ? "Failed" : "Succeeded")<<endl;
 };
+
+void DIGIPOT::setInputBias(int chan, double voltage){
+
+    if(voltage >= 860){
+        voltage = 860; 
+        SetWiper(chan,0);
+        return;
+    };
+    if(voltage <= 0){
+        voltage = 0; 
+        SetWiper(chan,255);
+        return;
+    }
+    // calculate resistance to achieve desired offset 
+    int N = round(256 - voltage/3.37); // this is a hack, not math 
+    cout<<N<<endl;
+    SetWiper(chan, N); 
+}
 
 ////////////////////////////////////// ADC
 I2CADC::I2CADC(){

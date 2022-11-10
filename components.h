@@ -34,9 +34,9 @@ class ThrDAC{
 
     // This component has its own EEPROM (?)
     private: 
-          int channel; 
-         unsigned addr; 
-         unsigned DACfd; 
+        int channel; 
+        unsigned addr; 
+        unsigned DACfd; 
         int ThrVoltage; 
 
     public: 
@@ -64,7 +64,8 @@ class DIGIPOT{
     public: 
         DIGIPOT(); 
         void SetWiper(int chan, int N); 
-        //~DIGIPOT(); 
+        void setInputBias(int chan, double voltage); 
+
 };
 
 class I2CADC{
