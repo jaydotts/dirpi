@@ -9,8 +9,10 @@ void takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, bool sa
   // extrg - whether or not to enable external triggers 
   // sftrg - whether or not to trigger using software trigger 
   // trg1 and trg2 - enable triggering on either of these channels 
+  int i=0; 
+  const char* output_fname = "outputfile.txt";
 
-  while(int i < nEvents){
+  while(i < nEvents){
 
     // reset address counters 
     ResetCounters();
@@ -52,17 +54,18 @@ void takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, bool sa
     // load SRAM data into global integer array, dataBlock
     readSRAMData(); 
 
-    // DEBUG: print out the data (remove in prod
+    // DEBUG: print out the data (remove in prod)
     for (int i=0; i<addressDepth; i++) {
         //if ((i+3)%10==0) cout <<i<<" "<<dataBlock[0][i] << " " << dataBlock[1][i]<<"\n";
-        cout <<i<<" "<<dataBlock[0][i] << " " << dataBlock[1][i]<<"\n";
+        //cout <<i<<" "<<dataBlock[0][i] << " " << dataBlock[1][i]<<"\n";
         //if (dataBlock[0][i] > 45) cout<<i<<" "<<dataBlock[0][i]<<" "<<dataBlock[1][i]<<"\n";
     }
 
     // dump the event data into the writeFile
-
+    WriteSRAMData(i,output_fname);
     i++;
     
+    // (end dead time) ============================================= **
     }
 }
 
@@ -74,7 +77,7 @@ int main(){
   digitalWrite(SFTTRG,0);
   
   //takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, bool saveData, bool plotData)
-  takeData(false, true, true, true, 100, false, false);
+  takeData(false, true, true, true, 10, false, false);
 
   return 0;
 

@@ -143,12 +143,18 @@ void readSRAMData(){
     }
 }
 
-void WriteSRAMData(int N = 100, int nEvents = 10){
+// helper for writeSRAMData
+bool isfile(const char *fileName){
+    std::ifstream infile(fileName);
+    return infile.good();
+}
+
+void WriteSRAMData(int eventNum, const char *fname){
 
     // Make buffers for waveform data
     FILE *OutputFile;
     char data_buffer[50];
-    sprintf(data_buffer, "outputfile.txt");
+    sprintf(data_buffer, fname);
     
     if(!isfile(data_buffer)){
         OutputFile = fopen(data_buffer , "w ");
@@ -157,10 +163,13 @@ void WriteSRAMData(int N = 100, int nEvents = 10){
         OutputFile = fopen(data_buffer , "a");
     } 
 
-    if (eventNum%N == 0 || eventNum<nEvents){
+   // if (eventNum%N == 0 || eventNum<nEvents){
     for (int i=0; i<4096; i++) {
        fprintf(OutputFile, "DATA: %i  %i %i %i\n", eventNum, i, dataBlock[0][i],dataBlock[1][i]);
      //plot waveform
-    }
+    //}
   };
+
+  fclose(OutputFile);
+  
 }

@@ -17,38 +17,6 @@
 #include "io.cpp"
 using namespace std;
 
-bool testDigiPot = false; 
-bool testDataRW = true; 
-
-// move to helper.cpp
-bool isfile(const char *fileName){
-    std::ifstream infile(fileName);
-    return infile.good();
-}
-
-// TODO: finish / test this 
-void WriteSRAMData(int N = 100, int nEvents = 10){
-
-    // Make buffers for waveform data
-    FILE *OutputFile;
-    char data_buffer[50];
-    sprintf(data_buffer, "outputfile.txt");
-    
-    if(!isfile(data_buffer)){
-        OutputFile = fopen(data_buffer , "w ");
-    }
-    else{
-        OutputFile = fopen(data_buffer , "a");
-    } 
-
-    if (eventNum%N == 0 || eventNum<nEvents){
-    for (int i=0; i<4096; i++) {
-       fprintf(OutputFile, "DATA: %i  %i %i %i\n", eventNum, i, dataBlock[0][i],dataBlock[1][i]);
-     //plot waveform
-    }
-  };
-}
-
 void DebugTests()
 {
   ResetCounters();
@@ -80,12 +48,16 @@ void DebugTests()
 
 int main(){
 
+    bool testDigiPot = true; 
+    bool testDataRW = false; 
+
     setupPins();
 
     if(testDigiPot){
         cout<<"Testing DigiPot"<<endl;
         DIGIPOT digi = DIGIPOT();
-        digi.setInputBias(2,150);
+        digi.SetWiper(1,255);
+        digi.SetWiper(2,255);
     }
 
     if(testDataRW){
@@ -95,8 +67,6 @@ int main(){
 
         DebugTests(); // Varying debugging tests
     }
-
-    WriteTestData();
 
     return 0;
 }
