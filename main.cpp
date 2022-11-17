@@ -2,114 +2,80 @@
 #include "io.cpp"
 using namespace std;
 
-// NOTE 
 
-// Many of these functions will be needed across modes, meaning 
-// that they should be grouped into one importable file 
+// begin data recording 
+void takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, bool saveData, bool plotData){
 
-void ToggleSlowClock() // Toggle the slow clock down then up
-{
- // Repeat twice to avoid rare errors.
- digitalWrite(SLWCLK,1);
- digitalWrite(SLWCLK,1);
- digitalWrite(SLWCLK,1);
- digitalWrite(SLWCLK,0);
- digitalWrite(SLWCLK,0);
- digitalWrite(SLWCLK,0);
+  // extrg - whether or not to enable external triggers 
+  // sftrg - whether or not to trigger using software trigger 
+  // trg1 and trg2 - enable triggering on either of these channels 
+
+  while(int i < nEvents){
+
+    // reset address counters 
+    ResetCounters();
+
+    // enable sampling by setting WE* high and OE* low
+    digitalWrite(DAQHalt,0);
+    digitalWrite(DAQHalt,0);
+    digitalWrite(DAQHalt,1);
+
+    // reset all MX bits back to 0
+    digitalWrite(MX0,0);
+    digitalWrite(MX1,0);
+    digitalWrite(MX2,0);
+
+    // enable trigger based on passed parameter 
+    if (extrg) digitalWrite(TrgExtEn, 1); 
+    else 
+      if (trg1) digitalWrite(Trg1En, 1);
+      if (trg2) digitalWrite(Trg2En, 1);
+    
+    StartSampling(); 
+    
+    if (sftrg)
+      delayMicroseconds(500); 
+      SoftwareTrigger();
+    
+    // sit and wait for a trigger to come along 
+    while (IsTriggered()==0){ 
+      delayMicroseconds(2);
+    }
+    
+    // hold DAQHalt high to stop data recording when trigger comes
+    // (dead time starts now) ====================================== **
+    // TODO: Record dead time 
+    digitalWrite(DAQHalt,1);
+    digitalWrite(DAQHalt,1);
+    digitalWrite(DAQHalt,1);
+
+    // load SRAM data into global integer array, dataBlock
+    readSRAMData(); 
+
+    // DEBUG: print out the data (remove in prod
+    for (int i=0; i<addressDepth; i++) {
+        //if ((i+3)%10==0) cout <<i<<" "<<dataBlock[0][i] << " " << dataBlock[1][i]<<"\n";
+        cout <<i<<" "<<dataBlock[0][i] << " " << dataBlock[1][i]<<"\n";
+        //if (dataBlock[0][i] > 45) cout<<i<<" "<<dataBlock[0][i]<<" "<<dataBlock[1][i]<<"\n";
+    }
+
+    // dump the event data into the writeFile
+
+    i++;
+    
+    }
 }
 
-void ResetCounters() // Reset the address counters
-{
- if (debug) {cout << "Reseting the address counters.\n"; cout.flush();}
- // Toggle high then low.
- // Repeat to avoid rare failures.
- digitalWrite(MR,1);
- digitalWrite(MR,1);
- digitalWrite(MR,1);
- digitalWrite(MR,1);
- digitalWrite(MR,0);
- digitalWrite(MR,0);
- digitalWrite(MR,0);
-}
-
-int IsTriggered() {
-  for (int i=0; i<100; i++)
-   if (ReadPin(OEbar) == 1) return 0;
-  return 1; 
-}
-
-void ReadData() // Read the 16 data bits into the global variable array
-{
-  int bitsMX1[8];
-  int bitsMX2[8];
-  for (int iMUX = 0; iMUX<8; iMUX++) {
-   SetMUXCode(iMUX);
-   bitsMX1[iMUX] = ReadPin(MX1Out);
-   bitsMX2[iMUX] = ReadPin(MX2Out);
-  }
-  // Fix the bit scrammbling done to ease trace routing
-  dataBits[0][0] = bitsMX1[3];
-  dataBits[0][1] = bitsMX1[0];
-  dataBits[0][2] = bitsMX1[1];
-  dataBits[0][3] = bitsMX1[2];
-  dataBits[0][4] = bitsMX1[4];
-  dataBits[0][5] = bitsMX1[6];
-  dataBits[0][6] = bitsMX1[7];
-  dataBits[0][7] = bitsMX1[5];
-  dataBits[1][0] = bitsMX2[3];
-  dataBits[1][1] = bitsMX2[0];
-  dataBits[1][2] = bitsMX2[1];
-  dataBits[1][3] = bitsMX2[2];
-  dataBits[1][4] = bitsMX2[5];
-  dataBits[1][5] = bitsMX2[7];
-  dataBits[1][6] = bitsMX2[6];
-  dataBits[1][7] = bitsMX2[4];
-  
-  // Extract the ADC values from the bits
-  dataCH1 = 0;
-  dataCH2 = 0;
-  int datascale = 1; // scale by 3300 /255 in readout
-  for (int i=0; i<8; i++) {
-   dataCH1 += dataBits[0][i]*datascale;
-   dataCH2 += dataBits[1][i]*datascale;
-   datascale *= 2;
-  }
-}
-
-void StartSampling()
-{
-  eventNum++;
-  for (int i=0; i<10; i++) ToggleSlowClock();
-  digitalWrite(SLWCLK,1);
-  digitalWrite(SLWCLK,1);
-  ResetCounters();
-  digitalWrite(DAQHalt,0);
-  digitalWrite(DAQHalt,0);
-  digitalWrite(DAQHalt,0);
-  digitalWrite(DAQHalt,0);
-}
-
-void SoftwareTrigger(int nhigh)
-{
-  for(int i=0; i<nhigh; i++) 
-   digitalWrite(SFTTRG,1);
-  digitalWrite(SFTTRG,0);
-}
-
-void SoftwareTrigger() {
-  SoftwareTrigger(3);
-}
-
-void 
-
-int main(int argc, char* argv[]){
+int main(){
 
   setupPins(); 
 
   digitalWrite(DAQHalt,0);
   digitalWrite(SFTTRG,0);
+  
+  //takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, bool saveData, bool plotData)
+  takeData(false, true, true, true, 100, false, false);
 
-  DebugTests(); // Varying debugging tests
   return 0;
 
 }

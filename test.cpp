@@ -20,6 +20,35 @@ using namespace std;
 bool testDigiPot = false; 
 bool testDataRW = true; 
 
+// move to helper.cpp
+bool isfile(const char *fileName){
+    std::ifstream infile(fileName);
+    return infile.good();
+}
+
+// TODO: finish / test this 
+void WriteSRAMData(int N = 100, int nEvents = 10){
+
+    // Make buffers for waveform data
+    FILE *OutputFile;
+    char data_buffer[50];
+    sprintf(data_buffer, "outputfile.txt");
+    
+    if(!isfile(data_buffer)){
+        OutputFile = fopen(data_buffer , "w ");
+    }
+    else{
+        OutputFile = fopen(data_buffer , "a");
+    } 
+
+    if (eventNum%N == 0 || eventNum<nEvents){
+    for (int i=0; i<4096; i++) {
+       fprintf(OutputFile, "DATA: %i  %i %i %i\n", eventNum, i, dataBlock[0][i],dataBlock[1][i]);
+     //plot waveform
+    }
+  };
+}
+
 void DebugTests()
 {
   ResetCounters();
@@ -51,19 +80,23 @@ void DebugTests()
 
 int main(){
 
-setupPins();
+    setupPins();
 
-if(testDigiPot){
-    DIGIPOT digi = DIGIPOT();
-    digi.setInputBias(2,150);
-}
+    if(testDigiPot){
+        cout<<"Testing DigiPot"<<endl;
+        DIGIPOT digi = DIGIPOT();
+        digi.setInputBias(2,150);
+    }
 
-if(testDataRW){
-    digitalWrite(DAQHalt,0);
-    digitalWrite(SFTTRG,0);
+    if(testDataRW){
+        cout<<"Testing ADC data read/write"<<endl;
+        digitalWrite(DAQHalt,0);
+        digitalWrite(SFTTRG,0);
 
-    DebugTests(); // Varying debugging tests
-}
+        DebugTests(); // Varying debugging tests
+    }
 
-return 0;
+    WriteTestData();
+
+    return 0;
 }

@@ -120,6 +120,7 @@ void DIGIPOT::setInputBias(int chan, double voltage){
 
 int DIGIPOT::test(){
     // full test of digipot critical features 
+    return 0;
 }
 
 ////////////////////////////////////// ADC
@@ -138,7 +139,7 @@ DIGIO::DIGIO( int chan){
     DIGIOfd = wiringPiI2CSetup(addr);
 };
 
-////////////////////////////////////// IO
+////////////////////////////////////// GPIO EXPANDER
 IO::IO(){
     addr = 0x21; 
 };
@@ -146,6 +147,7 @@ IO::IO(){
 void IO::SetClock(int speed){
     // set En20 or En40 high 
     // (not both) to select the clock. 
+    
 };
 
 // Other: 
@@ -155,7 +157,7 @@ MUX::MUX(int chan){
     channel = chan; 
 };
 
-////////////////////////////////////// MUX
+////////////////////////////////////// SRAM
 SRAM::SRAM(){
 };
 

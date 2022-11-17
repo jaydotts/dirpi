@@ -133,3 +133,34 @@ void SoftwareTrigger(int nhigh)
 void SoftwareTrigger() {
   SoftwareTrigger(3);
 }
+
+void readSRAMData(){
+    for (int i=0; i<addressDepth; i++) {
+      ToggleSlowClock();
+      ReadData();
+      dataBlock[0][i] = dataCH1;
+      dataBlock[1][i] = dataCH2;
+    }
+}
+
+void WriteSRAMData(int N = 100, int nEvents = 10){
+
+    // Make buffers for waveform data
+    FILE *OutputFile;
+    char data_buffer[50];
+    sprintf(data_buffer, "outputfile.txt");
+    
+    if(!isfile(data_buffer)){
+        OutputFile = fopen(data_buffer , "w ");
+    }
+    else{
+        OutputFile = fopen(data_buffer , "a");
+    } 
+
+    if (eventNum%N == 0 || eventNum<nEvents){
+    for (int i=0; i<4096; i++) {
+       fprintf(OutputFile, "DATA: %i  %i %i %i\n", eventNum, i, dataBlock[0][i],dataBlock[1][i]);
+     //plot waveform
+    }
+  };
+}

@@ -15,6 +15,7 @@
 
 #include <chrono>
 #include "Adafruit_ADS1015.h"
+#include "components.cpp"
 //#include "PCA9554.hpp"
 using namespace std;
 
@@ -122,6 +123,7 @@ void setupPins(){
   // pinMode(PSCL,OUTPUT
   pinMode(PSCL,PWM_OUTPUT);
 }
+
 void setupTest(){
 
     setupPins();
@@ -137,4 +139,9 @@ void setupTest(){
     pinMode(PSCL,PWM_OUTPUT);
     pwmSetMode(PWM_MODE_MS);
     pwmSetRange(1024);
+}
+
+void setupMain(){
+  setupPins(); 
+  // tbd 
 }
