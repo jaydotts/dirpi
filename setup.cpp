@@ -121,7 +121,7 @@ void setupPins(){
   pinMode(Trg1En,OUTPUT);
   pinMode(Trg2En,OUTPUT);
   // pinMode(PSCL,OUTPUT
-  pinMode(PSCL,PWM_OUTPUT);
+  pinMode(PSCL,OUTPUT);
 }
 
 void setupTest(){

@@ -57,6 +57,8 @@ void ThrDAC::SetThr(int voltage, int persist){
     if (DACval < 0) DACval = 0;
     if (DACval > 4095) DACval = 4095;
 
+    cout<<"Setting DAC"<<channel<<" to "<<DACval<<endl;
+
     // MCP4725 expects a 12bit data stream in two bytes (2nd & 3rd of transmission)
     data[0] = (DACval >> 8) & 0xFF; // [0 0 0 0 D11 D10 D9 D8] (first bits are modes for our use 0 is fine)
     data[1] = DACval; // [D7 D6 D5 D4 D3 D2 D1 D0]

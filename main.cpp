@@ -9,62 +9,39 @@ void takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, bool sa
   // extrg - whether or not to enable external triggers 
   // sftrg - whether or not to trigger using software trigger 
   // trg1 and trg2 - enable triggering on either of these channels 
-  int i=0; 
+
   const char* output_fname = "outputfile.txt";
 
-  while(i < nEvents){
+  // enable trigger based on passed parameter 
+  // todo: set trigEns low 
 
-    // reset address counters 
-    ResetCounters();
+  while(eventNum < nEvents){
+    cout<<eventNum<<endl;
 
-    // enable sampling by setting WE* high and OE* low
-    digitalWrite(DAQHalt,0);
-    digitalWrite(DAQHalt,0);
-    digitalWrite(DAQHalt,1);
+    // Toggle SLWCLCK high, Reset counters, Deassert DAQHalt
+    // to enable sampling mode
+    StartSampling(trg1,trg2); 
 
-    // reset all MX bits back to 0
-    digitalWrite(MX0,0);
-    digitalWrite(MX1,0);
-    digitalWrite(MX2,0);
-
-    // enable trigger based on passed parameter 
-    if (extrg) digitalWrite(TrgExtEn, 1); 
-    else 
-      if (trg1) digitalWrite(Trg1En, 1);
-      if (trg2) digitalWrite(Trg2En, 1);
-    
-    StartSampling(); 
-    
-    if (sftrg)
+    if (sftrg){
+      cout<<"Triggering"<<endl;
       delayMicroseconds(500); 
       SoftwareTrigger();
-    
-    // sit and wait for a trigger to come along 
-    while (IsTriggered()==0){ 
-      delayMicroseconds(2);
     }
+
+    // sit and wait for a trigger to come along 
+    while (ReadPin(OEbar) == 1);
     
     // hold DAQHalt high to stop data recording when trigger comes
     // (dead time starts now) ====================================== **
     // TODO: Record dead time 
     digitalWrite(DAQHalt,1);
-    digitalWrite(DAQHalt,1);
-    digitalWrite(DAQHalt,1);
+    cout<<"Trigger detected"<<endl;
 
     // load SRAM data into global integer array, dataBlock
     readSRAMData(); 
 
-    // DEBUG: print out the data (remove in prod)
-    for (int i=0; i<addressDepth; i++) {
-        //if ((i+3)%10==0) cout <<i<<" "<<dataBlock[0][i] << " " << dataBlock[1][i]<<"\n";
-        //cout <<i<<" "<<dataBlock[0][i] << " " << dataBlock[1][i]<<"\n";
-        //if (dataBlock[0][i] > 45) cout<<i<<" "<<dataBlock[0][i]<<" "<<dataBlock[1][i]<<"\n";
-    }
-
     // dump the event data into the writeFile
-    WriteSRAMData(i,output_fname);
-    i++;
-    
+    WriteSRAMData(eventNum-1,output_fname);
     // (end dead time) ============================================= **
     }
 }
@@ -76,8 +53,12 @@ int main(){
   digitalWrite(DAQHalt,0);
   digitalWrite(SFTTRG,0);
   
+  digitalWrite(PSCL,1);
+  digitalWrite(PSCL,1);
+  digitalWrite(PSCL,1);
+
   //takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, bool saveData, bool plotData)
-  takeData(false, true, true, true, 10, false, false);
+  takeData(false, false, true, false, 5, false, false);
 
   return 0;
 

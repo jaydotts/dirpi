@@ -1,4 +1,9 @@
+// Handles data I/O operations such as SRAM read/write, 
+// sampling start/stop, and trigger handling.
+
 #include "setup.cpp"
+
+///////////////////////////////////// Basic I/O
 
 int ReadPin(int iPin) // Read a wPi pin with error checking
 {
@@ -44,20 +49,20 @@ void SetMUXCode(int val) // Set the multiplexer code
 void ToggleSlowClock() // Toggle the slow clock down then up
 {
  // Repeat twice to avoid rare errors.
- digitalWrite(SLWCLK,1);
- digitalWrite(SLWCLK,1);
- digitalWrite(SLWCLK,1);
  digitalWrite(SLWCLK,0);
  digitalWrite(SLWCLK,0);
  digitalWrite(SLWCLK,0);
+ digitalWrite(SLWCLK,1);
+ digitalWrite(SLWCLK,1);
+ digitalWrite(SLWCLK,1);
 }
 
 void ResetCounters() // Reset the address counters
 {
  if (debug) {cout << "Reseting the address counters.\n"; cout.flush();}
+ //cout<<"Resetting Address Counters"<<endl;
  // Toggle high then low.
  // Repeat to avoid rare failures.
- digitalWrite(MR,1);
  digitalWrite(MR,1);
  digitalWrite(MR,1);
  digitalWrite(MR,1);
@@ -70,6 +75,76 @@ int IsTriggered() {
   for (int i=0; i<100; i++)
    if (ReadPin(OEbar) == 1) return 0;
   return 1; 
+}
+
+void StartSampling(bool trg1, bool trg2)
+{
+  eventNum++;
+  ToggleSlowClock();
+  digitalWrite(SLWCLK,1);
+  digitalWrite(SLWCLK,1);
+
+  // Disable all triggers 
+  digitalWrite(TrgExtEn, 0); 
+  digitalWrite(TrgExtEn, 0); 
+  digitalWrite(TrgExtEn, 0); 
+
+  digitalWrite(Trg1En, 0);
+  digitalWrite(Trg1En, 0);
+  digitalWrite(Trg1En, 0);
+
+  digitalWrite(Trg2En, 0);
+  digitalWrite(Trg2En, 0);
+  digitalWrite(Trg2En, 0);
+
+  // Enable sampling (then wait to clear out stale data)
+  digitalWrite(DAQHalt,0);
+  digitalWrite(DAQHalt,0);
+  digitalWrite(DAQHalt,0);
+
+  // Reset counters 
+  ResetCounters();
+
+  // Reset all MX bits back to 0
+  digitalWrite(MX0,0);
+  digitalWrite(MX1,0);
+  digitalWrite(MX2,0);
+  
+  // Wait ~ 210 uS for 20MHz clock)
+  delayMicroseconds(210);
+
+  // Enable triggers 
+  if (trg1) {
+    digitalWrite(Trg1En, 1);
+    digitalWrite(Trg1En, 1);
+    digitalWrite(Trg1En, 1);
+    cout<<"Trig1 Enabled"<<endl;
+  }
+
+  if (trg2) {
+    digitalWrite(Trg2En, 1);
+    digitalWrite(Trg2En, 1);
+    digitalWrite(Trg2En, 1);
+    cout<<"Trig2 Enabled"<<endl;
+  }
+
+  //digitalWrite(TrgExtEn, 1); 
+  //digitalWrite(TrgExtEn, 1); 
+  //digitalWrite(TrgExtEn, 1); 
+}
+
+void SoftwareTrigger(int nhigh)
+{
+  for(int i=0; i<nhigh; i++) 
+   digitalWrite(SFTTRG,1);
+  digitalWrite(SFTTRG,0);
+}
+
+void SoftwareTrigger() {
+  SoftwareTrigger(3);
+  delayMicroseconds(1); 
+  SoftwareTrigger(3);
+  delayMicroseconds(1); 
 }
 
 void ReadData() // Read the 16 data bits into the global variable array
@@ -110,28 +185,22 @@ void ReadData() // Read the 16 data bits into the global variable array
   }
 }
 
-void StartSampling()
+void ReReadData()
 {
-  eventNum++;
-  for (int i=0; i<10; i++) ToggleSlowClock();
-  digitalWrite(SLWCLK,1);
-  digitalWrite(SLWCLK,1);
-  ResetCounters();
-  digitalWrite(DAQHalt,0);
-  digitalWrite(DAQHalt,0);
-  digitalWrite(DAQHalt,0);
-  digitalWrite(DAQHalt,0);
-}
+  trg1CntAddr=-1;
+  trg2CntAddr=-1;
 
-void SoftwareTrigger(int nhigh)
-{
-  for(int i=0; i<nhigh; i++) 
-   digitalWrite(SFTTRG,1);
-  digitalWrite(SFTTRG,0);
-}
-
-void SoftwareTrigger() {
-  SoftwareTrigger(3);
+  // Reread the data to see if there are any differences
+ for (int i=0; i<addressDepth; i++) {
+  ToggleSlowClock();
+  ReadData();
+  if (dataBlock[0][i] != dataCH1)
+    cout << "mismatch: "<<i<<" "<<dataBlock[0][i]<<" "<<dataCH1<<"\n";
+  if (dataBlock[1][i] != dataCH2)
+    cout << "mismatch: "<<i<<" "<<dataBlock[1][i]<<" "<<dataCH2<<"\n";
+  if (trg1CntAddr < 0 && ReadPin(Trg1Cnt)==1) trg1CntAddr=i;
+  if (trg2CntAddr < 0 && ReadPin(Trg2Cnt)==1) trg2CntAddr=i;
+ }
 }
 
 void readSRAMData(){
@@ -141,6 +210,8 @@ void readSRAMData(){
       dataBlock[0][i] = dataCH1;
       dataBlock[1][i] = dataCH2;
     }
+    //debug
+    ReReadData();
 }
 
 // helper for writeSRAMData

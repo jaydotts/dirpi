@@ -2,6 +2,8 @@ import numpy as np
 import re
 import matplotlib.pyplot as plt
 import os 
+import matplotlib
+matplotlib.use('Agg')
 
 ########################### params
 # target filename

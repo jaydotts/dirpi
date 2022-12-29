@@ -42,7 +42,6 @@ class ThrDAC{
     public: 
         ThrDAC( int chan); 
         void SetThr(int voltage, int persist); 
-        ~ThrDAC();
 };
 
 class DIGIPOT{
