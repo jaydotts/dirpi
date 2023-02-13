@@ -25,7 +25,6 @@ class BiasDAC{
         BiasDAC( int chan); 
         void SetVoltage(int voltage); 
         void PrintBias();
-        ~BiasDAC();
 
 };
 
@@ -86,7 +85,7 @@ class EEPROM{
     
     public: 
         EEPROM(); 
-        ~EEPROM(); 
+        
 };
 
 class DIGIO{
@@ -108,11 +107,16 @@ class IO{
     //IO expander used to select clock
     private: 
          unsigned addr; 
+         unsigned fd;
     
     public: 
         IO(); 
-        void SetClock(int speed); 
-        ~IO(); 
+        void setClock(int speed_MHz); 
+        void setConfigReg(unsigned int write_byte);
+        void setPolarityReg(unsigned int write_byte);
+        void setIOState(unsigned int write_byte);
+        void writePin(int pin);
+        void readPin(int pin);
 };
 
 // Non-I2C Devices: 

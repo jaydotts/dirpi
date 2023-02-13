@@ -19,6 +19,8 @@
 //#include "PCA9554.hpp"
 using namespace std;
 
+#define CONFIG_FILE_PATH "./config/digi.config"
+
 // Define useful names for the GPIO pins and the wiringPi interface to them.
 // The wiringPi numbering is described with the "gpio readall" command for RPis with wiringPi installed.
 // I copy its output for the Pi3 below, and edit in columns with the photon counter uses.
@@ -99,6 +101,58 @@ int Trg2En = 4;    // OUTPUT. Set high to enable CH2 triggers.
 int PSCL = 1;      // OUTPUT (PWM). Used to prescale the number of CH1 OR CH2 triggers accepted.
 int PSCLduty = 1;      // OUTPUT (PWM). Used to prescale the number of CH1 OR CH2 triggers accepted.
 
+int PotValCh1 = 0;
+int PotValCh2 = 0;
+int DACValCh1 = 0; 
+int DACValCh2 = 0;
+
+bool LoadRunConfiguration(const char* configFile){
+
+  ifstream cfile(configFile, ios::out);
+    if (cfile.is_open()){ //checking whether the file is open
+      string line;
+      while(getline(cfile, line)){ //read data from file object and put it into string.
+
+          if( line.empty() || line[0] == '#' ){continue;}
+
+            auto delimiterPos = line.find("=");
+            auto name = line.substr(0, delimiterPos);
+            auto value = line.substr(delimiterPos + 1);
+            std::cout << name << " " << value << '\n';
+
+      // parse config file for run settings 
+      if (name.compare("nEvents ")==0 ){nEvents = stoi(value);} 
+      if (name.compare("DACValCh1 ")==0 ){DACValCh1 = stoi(value);} 
+      if (name.compare("DACValCh2 ")==0 ){DACValCh2 = stoi(value);} 
+      if (name.compare("PotValCh1 ")==0 ){PotValCh1 = stoi(value);} 
+      if (name.compare("PotValCh2 ")==0 ){PotValCh2 = stoi(value);} 
+  
+      }
+      cfile.close();
+    }
+}
+
+// defunct?
+void setupComponents(){
+  cout<<"Initializing components..."<<endl;
+  
+  // Setup digipots
+  DIGIPOT Pot1 = DIGIPOT();
+  DIGIPOT Pot2 = DIGIPOT();
+
+  // Setup threshold DACs
+  ThrDAC ThrDAC1 = ThrDAC(1); 
+  ThrDAC ThrDAC2 = ThrDAC(2); 
+  
+  // Setup IO expander chip
+  //IO GPIO1 = IO(); 
+
+  cout<<"POT1: "<<PotValCh1<<endl;
+  Pot1.SetWiper(1, PotValCh1);
+  Pot2.SetWiper(2, PotValCh2); 
+  ThrDAC1.SetThr(DACValCh1,0); 
+  ThrDAC2.SetThr(DACValCh2,0); 
+}
 
 void setupPins(){
   const char* configFile = "Config.txt";

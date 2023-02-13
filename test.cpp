@@ -1,4 +1,4 @@
-// quick tests 
+// test functions 
 
 #include <wiringPi.h>
 #include <wiringPiI2C.h>
@@ -16,44 +16,6 @@
 #include <chrono>
 #include "io.cpp"
 using namespace std;
-
-
-// Enable / Disable test modes here 
-bool testDigiPot = true; 
-bool testDataRW = false; 
-bool testDAC = true; 
-bool testSampling = false;
-bool testTrgCount = false;
-
-
-void DebugTests()
-{
-  ResetCounters();
-  digitalWrite(DAQHalt,0);
-  digitalWrite(DAQHalt,0);
-  digitalWrite(DAQHalt,1);// Makes WE* high and OE* low
-  digitalWrite(MX0,0);
-  digitalWrite(MX1,0);
-  digitalWrite(MX2,0);
-  digitalWrite(TrgExtEn,1);
-  //StartSampling();
-  delayMicroseconds(500);
-  SoftwareTrigger(3);
-  SoftwareTrigger(3);
-  SoftwareTrigger(3);
-  //delayMicroseconds(1);
-
-  digitalWrite(DAQHalt,1);// Makes WE* high and OE* low
-
-  for (int i=0; i<addressDepth; i++) {
-          ToggleSlowClock();
-          ReadData();
-          dataBlock[0][i] = dataCH1;
-          dataBlock[1][i] = dataCH2;
-		  if ((i+3)%10==0) cout <<i<<" "<<dataCH1 << " " << dataCH2<<"\n";
-		  //cout << i << " " << dataCH1 << " " << dataCH2<<"\n";
-         }
-}
 
 void TestSLWCLK()
 {
@@ -153,7 +115,6 @@ void testTriggerDetect(int nTriggers, bool trg1, bool trg2){
     double trig_rate = nTriggers / fp_us.count(); 
 
     cout<<"Trigger frequency: "<<trig_rate*1000<<" kHz"<<endl;
-
     
     }
 
@@ -208,43 +169,100 @@ void testForcedSampling(int nEvents){
     }
 }
 
-int main(){
+bool testDigiPot(bool chan1 = true, bool chan2 = true){
+    cout<<"Sweeping wipers from 0-255"<<endl;
+    DIGIPOT digi = DIGIPOT();
+    
+    for(int i = 0; i<255; i++){
+        digi.SetWiper(1,i);
+        digi.SetWiper(2,i);
+        delayMicroseconds(200);
+    }
+    return true;
+};
+
+bool testCalibPulse(bool ch1, int nSamples = 100){
+
+    bool PULSE_OK = false; 
+    const char* output_fname = "outputfile.txt";
+    
+    // initialize the component 
+    BiasDAC DAC1 = BiasDAC(1); 
+    //BiasDAC DAC2 = BiasDAC(2); 
+
+    DAC1.SetVoltage(220);
+    delayMicroseconds(10000);
+
+    cout<<"Starting test samples"<<endl;
+
+    digitalWrite(PSCL, 1); 
+
+    int event = 0; 
+    while(event < nEvents){
+        cout<<event<<endl;
+        StartSampling(false, true, false); 
+        delayMicroseconds(200); 
+
+        ToggleCalibPulse(); 
+
+        while (ReadPin(OEbar) == 1);
+
+        digitalWrite(DAQHalt,1);
+
+        // load SRAM data into global integer array, dataBlock
+        readSRAMData(); 
+
+        // dump the event data into the writeFile
+        WriteSRAMData(event,output_fname);
+
+        event++;
+    }
+
+    return PULSE_OK; 
+}
+
+bool testIO(){
+    IO GPIO = IO(); 
+    GPIO.setClock(20);
+}
+
+int main(int argc, char **argv){
 
     setupPins();
 
-    if(testDigiPot){
-        cout<<"Testing DigiPot"<<endl;
-        DIGIPOT digi = DIGIPOT();
-        digi.SetWiper(1,255);
-        digi.SetWiper(2,255);
-    }
+    // Replace this with a test run config file
+    LoadRunConfiguration("config/test_config.config");
 
-    if(testDAC){
+    for (int i = 1; i < argc; ++i){
 
-        cout<<"Setting DACs"<<endl;
-        ThrDAC DAC1 = ThrDAC(1); 
-        ThrDAC DAC2 = ThrDAC(2); 
+        string arg = argv[i];
+        cout<<arg<<": \n"<<endl;
 
-        DAC1.SetThr(1000,0); 
-        DAC2.SetThr(1000,0);
+            if (arg == "digipot"){
+                cout<<"Running Test of Digital Potentiometer"<<endl;
+                testDigiPot();
+            }
 
-    }
+            else if (arg == "slowclock"){
+                cout<<"Running Test of SlowClock"<<endl;
+                TestSLWCLK();
+            }
 
-    if(testSampling){
-        //testForcedSampling(2);
-    }
+            else if (arg == "GPIO"){
+                cout<<"Running GPIO Test"<<endl;
+                testIO();
+            }
 
-    if(testTrgCount){
-        testTriggerDetect(1000, true, false);
-    }
+            else if (arg == "Pulse"){
+                setupComponents();
+                cout<<"Running Pulse Test"<<endl;
+                testCalibPulse(true); 
+            }
 
-    if(testDataRW){
-        cout<<"Testing ADC data read/write"<<endl;
-        digitalWrite(DAQHalt,0);
-        digitalWrite(SFTTRG,0);
+            else{
+                cout<<"ERROR: "<<arg<<" is not a test option \n"<<endl;
+            }
 
-        DebugTests(); // Varying debugging tests
-    }
-
+        }
     return 0;
 }

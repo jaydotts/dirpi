@@ -77,7 +77,7 @@ int IsTriggered() {
   return 1; 
 }
 
-void StartSampling(bool trg1, bool trg2)
+void StartSampling(bool extrg, bool trg1, bool trg2)
 {
   eventNum++;
   ToggleSlowClock();
@@ -104,6 +104,8 @@ void StartSampling(bool trg1, bool trg2)
 
   // Reset counters 
   ResetCounters();
+  ResetCounters(); 
+  ResetCounters();
 
   // Reset all MX bits back to 0
   digitalWrite(MX0,0);
@@ -111,26 +113,26 @@ void StartSampling(bool trg1, bool trg2)
   digitalWrite(MX2,0);
   
   // Wait ~ 210 uS for 20MHz clock)
-  delayMicroseconds(210);
+  delayMicroseconds(1);
 
   // Enable triggers 
   if (trg1) {
     digitalWrite(Trg1En, 1);
     digitalWrite(Trg1En, 1);
     digitalWrite(Trg1En, 1);
-    cout<<"Trig1 Enabled"<<endl;
   }
 
   if (trg2) {
     digitalWrite(Trg2En, 1);
     digitalWrite(Trg2En, 1);
     digitalWrite(Trg2En, 1);
-    cout<<"Trig2 Enabled"<<endl;
   }
 
-  //digitalWrite(TrgExtEn, 1); 
-  //digitalWrite(TrgExtEn, 1); 
-  //digitalWrite(TrgExtEn, 1); 
+  if(extrg){
+    digitalWrite(TrgExtEn, 1); 
+    digitalWrite(TrgExtEn, 1); 
+    digitalWrite(TrgExtEn, 1);  
+  }
 }
 
 void SoftwareTrigger(int nhigh)
@@ -243,4 +245,14 @@ void WriteSRAMData(int eventNum, const char *fname){
 
   fclose(OutputFile);
   
+}
+
+void ToggleCalibPulse(){
+  cout<<"Sending pulse"<<endl;
+  digitalWrite(Calib, 1); 
+  digitalWrite(Calib, 1); 
+  digitalWrite(Calib, 1); 
+  delayMicroseconds(1); 
+  digitalWrite(Calib, 0); 
+  digitalWrite(Calib, 0); 
 }

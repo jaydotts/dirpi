@@ -14,7 +14,7 @@ using namespace std;
 
 // I2C Devices: 
 ////////////////////////////////////// Bias DACs 
-BiasDAC::BiasDAC( int chan){ 
+BiasDAC::BiasDAC(int chan){ 
     // Sets amplitude of injected pulse 
 
     channel = chan; 
@@ -29,13 +29,25 @@ BiasDAC::BiasDAC( int chan){
 
 void BiasDAC::PrintBias(){
     int readbyte = wiringPiI2CReadReg8(DACfd, 10);
-    cout<<"The chan "<<channel<<" bias byte is "<<readbyte<<endl;
+    int voltage = readbyte*(3300/4095);
+    cout<<"CH"<<channel<<" pulse amplitude setting: "<<voltage<<" mV"<<endl;
 };
 
 void BiasDAC::SetVoltage(int voltage){
-    if (voltage < 0) voltage = 0; 
-    if (voltage > 255) voltage = 255; 
-    BiasVoltage = voltage; 
+
+    int data[2]; 
+
+    int DACval = (4095*voltage)/3300;
+    if (DACval < 0) DACval = 0;
+    if (DACval > 4095) DACval = 4095;
+
+    // MCP4725 expects a 12bit data stream in two bytes (2nd & 3rd of transmission)
+    data[0] = (DACval >> 8) & 0xFF; // [0 0 0 0 D11 D10 D9 D8] (first bits are modes for our use 0 is fine)
+    data[1] = DACval; // [D7 D6 D5 D4 D3 D2 D1 D0]
+    int result = wiringPiI2CWriteReg8(DACfd, data[0], data[1]);
+
+ cout<<"Setting bias to "<<voltage<<"mV for channel "<<channel<<" "<< (result ? "FAILED" : "Succeeded")<<endl;
+
 };
 
 ////////////////////////////////////// Threshold DACs
@@ -58,12 +70,15 @@ void ThrDAC::SetThr(int voltage, int persist){
     if (DACval > 4095) DACval = 4095;
 
     cout<<"Setting DAC"<<channel<<" to "<<DACval<<endl;
+    //wiringPiI2CWrite(DACfd, 0x40);// WRITE register
 
     // MCP4725 expects a 12bit data stream in two bytes (2nd & 3rd of transmission)
     data[0] = (DACval >> 8) & 0xFF; // [0 0 0 0 D11 D10 D9 D8] (first bits are modes for our use 0 is fine)
     data[1] = DACval; // [D7 D6 D5 D4 D3 D2 D1 D0]
-    wiringPiI2CWriteReg8(DACfd, data[0], data[1]);
+    int result = wiringPiI2CWriteReg8(DACfd, data[0], data[1]);
+    cout<<"Setting trig threshold to "<<voltage<<"mV for channel "<<channel<<" "<< (result ? "FAILED" : "Succeeded")<<endl;
 };
+
 
 ////////////////////////////////////// DIGIPOT
 DIGIPOT::DIGIPOT(){
@@ -98,7 +113,8 @@ void DIGIPOT::SetWiper(int chan, int N){
     // Write N (0-255) to wiper memory. I 
     unsigned int write_byte = (N & 0xFF);
     int result = wiringPiI2CWriteReg8(fd,wiper_reg,write_byte);
-    cout<<"Writing N="<<N<<" to channel "<<chan<<" "<< (result ? "Failed" : "Succeeded")<<endl;
+
+    cout<<"Writing N="<<N<<" to channel "<<chan<<" pot "<< (result ? "Failed" : "Succeeded")<<endl;
 };
 
 void DIGIPOT::setInputBias(int chan, double voltage){
@@ -118,12 +134,12 @@ void DIGIPOT::setInputBias(int chan, double voltage){
     int N = round((16*(2003*3300 - 5003*voltage))/(125*(3300-voltage))); 
     cout<<N<<endl;
     SetWiper(chan, N); 
-}
+};
 
 int DIGIPOT::test(){
     // full test of digipot critical features 
     return 0;
-}
+};
 
 ////////////////////////////////////// ADC
 I2CADC::I2CADC(){
@@ -136,7 +152,7 @@ EEPROM::EEPROM(){
 };
 
 ////////////////////////////////////// DIGIO
-DIGIO::DIGIO( int chan){
+DIGIO::DIGIO(int chan){
     channel = chan; 
     DIGIOfd = wiringPiI2CSetup(addr);
 };
@@ -144,12 +160,58 @@ DIGIO::DIGIO( int chan){
 ////////////////////////////////////// GPIO EXPANDER
 IO::IO(){
     addr = 0x21; 
+    fd = wiringPiI2CSetup(addr); 
+    if (fd == -1) cerr<<"Unable to setup device at "<<addr<<endl;
 };
 
-void IO::SetClock(int speed){
-    // set En20 or En40 high 
-    // (not both) to select the clock. 
-    
+void IO::setConfigReg(unsigned int write_byte){
+    int result = wiringPiI2CWriteReg8(fd,3,write_byte);
+    cout<<result<<endl;
+};
+
+void IO::setPolarityReg(unsigned int write_byte){
+    cout<<"Flipping polarity"<<endl;
+    int result = wiringPiI2CWriteReg8(fd,2,write_byte);
+    cout<<result<<endl;
+};
+
+void IO::setIOState(unsigned int write_byte){
+    cout<<"Setting IO state"<<endl;
+    int result = wiringPiI2CWriteReg8(fd,1,write_byte);
+    cout<<result<<endl;
+}
+
+void IO::setClock(int speed_MHz){
+
+    // In order to write to pins, 
+    // first set configuration to WRITE mode, 
+    // then send write byte into reg. 1, then 
+    // set all pins back to READ mode. 
+
+    if(speed_MHz == 20){
+        setConfigReg(0b00000011);
+        setIOState(0b00000000);
+        delayMicroseconds(3); 
+        setIOState(0b00000010);
+        setConfigReg(0b00000000);
+        cout<<"Clock set to 20MHz"<<endl;
+    }
+    else if(speed_MHz == 40){ 
+        setConfigReg(0b00000011);
+        setIOState(0b00000000);
+        delayMicroseconds(3); 
+        setIOState(0b00000001);
+        setConfigReg(0b00000000);
+        cout<<"Clock set to 40MHz"<<endl;
+    }
+    else{cout<<"Invalid clock speed selected"<<endl;}
+
+};
+
+void IO::readPin(int pin){
+    int output; 
+    output = wiringPiI2CReadReg8(addr,pin);
+    cout<<"Pin "<<pin<<"output: "<<output<<endl;
 };
 
 // Other: 

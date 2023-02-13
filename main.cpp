@@ -20,8 +20,9 @@ void takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, bool sa
 
     // Toggle SLWCLCK high, Reset counters, Deassert DAQHalt
     // to enable sampling mode
-    StartSampling(trg1,trg2); 
-
+    StartSampling(extrg,trg1,trg2); 
+    delayMicroseconds(200);
+    
     if (sftrg){
       cout<<"Triggering"<<endl;
       delayMicroseconds(500); 
@@ -35,7 +36,6 @@ void takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, bool sa
     // (dead time starts now) ====================================== **
     // TODO: Record dead time 
     digitalWrite(DAQHalt,1);
-    cout<<"Trigger detected"<<endl;
 
     // load SRAM data into global integer array, dataBlock
     readSRAMData(); 
@@ -47,18 +47,15 @@ void takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, bool sa
 }
 
 int main(){
-
-  setupPins(); 
-
-  digitalWrite(DAQHalt,0);
-  digitalWrite(SFTTRG,0);
   
-  digitalWrite(PSCL,1);
-  digitalWrite(PSCL,1);
+  LoadRunConfiguration("config/digi.config");
+
+  setupPins();
+  setupComponents();
   digitalWrite(PSCL,1);
 
   //takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, bool saveData, bool plotData)
-  takeData(false, false, true, false, 5, false, false);
+  takeData(false, false, true, false, nEvents, false, false);
 
   return 0;
 
