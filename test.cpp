@@ -76,47 +76,100 @@ void testTriggerCount(int nTriggers, bool trg1, bool trg2){
     cout<<"Trigger frequency: "<<trig_rate*1000<<" kHz"<<endl;
 }
 
-void testTriggerDetect(int nTriggers, bool trg1, bool trg2){
-    
-    digitalWrite(TrgExtEn, 1); 
+// helper function for trigger rate measurement
+double CalcScalar(int nSLWCLK, int channel, double tDiff) {
+    double nTrigs = double(pow(2,14) - nSLWCLK); 
+    cout<<tDiff<<" microseconds"<<std::endl;
+	return 1000000*nTrigs/tDiff;
+}
 
-    if (trg1) {
-        digitalWrite(Trg1En, 1);
-        digitalWrite(Trg1En, 1);
-        digitalWrite(Trg1En, 1);
-        cout<<"Trig1 Enabled"<<endl;
+// returns false if the count is full 
+bool Trg1CntOut(){
+    return (ReadPin(Trg1Cnt)==0|| 
+            ReadPin(Trg1Cnt)==0||
+            ReadPin(Trg1Cnt)==0||
+            ReadPin(Trg1Cnt)==0);
     }
 
-    if (trg2) {
-        digitalWrite(Trg2En, 1);
-        digitalWrite(Trg2En, 1);
-        digitalWrite(Trg2En, 1);
-        cout<<"Trig2 Enabled"<<endl;
-    }
-    int count = 0;
+void testTrigRate(){
 
-    auto t1 = std::chrono::high_resolution_clock::now();
-    //StartSampling();
-    while(count <= nTriggers){
+    bool trg1 = false; 
+    bool trg2 = true; 
+    //int addressDepth = 4096; 
+
+    digitalWrite(PSCL, 1);
+
+    // start time measurement 
+    // read the value in Trg1CntOut
+    // then count the number of clock cycles 
+    // needed for Trg1CntOut to go high 
+    cout<<"Starting sampling"<<endl;
+
+    int ntests = 1000; 
+    for(int i=0; i!=ntests;i++){
+
+        // Reset counters 
+        ResetCounters();
+        ResetCounters(); 
+        ResetCounters();
+        cout<<"Counters reset"<<endl;
+
+        // Enable sampling (then wait to clear out stale data)
+        if (trg1) {
+            digitalWrite(Trg1En, 0);
+            digitalWrite(Trg1En, 0);
+            digitalWrite(Trg1En, 0);
+            digitalWrite(Trg1En, 1);
+            digitalWrite(Trg1En, 1);
+            digitalWrite(Trg1En, 1);
+            }
+
+        if (trg2) {
+            digitalWrite(Trg2En, 0);
+            digitalWrite(Trg2En, 0);
+            digitalWrite(Trg2En, 0);
+            digitalWrite(Trg2En, 1);
+            digitalWrite(Trg2En, 1);
+            digitalWrite(Trg2En, 1);
+            }
+
+        digitalWrite(DAQHalt,0);
+        digitalWrite(DAQHalt,0);
+        digitalWrite(DAQHalt,0);
+
+        auto t0 = std::chrono::high_resolution_clock::now(); 
+        while(ReadPin(Trg2Cnt)==0);
+        auto t1 = std::chrono::high_resolution_clock::now();  
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t1-t0);
+        double tDiff = duration.count();
+        WriteDouble(double(1024/tDiff),"TrigRateCH2.csv");
+        delayMicroseconds(100); 
+    }
+    /*
         while (ReadPin(OEbar) == 1);
-        count++;
-        //StartSampling();
-    }
-    auto t2 = std::chrono::high_resolution_clock::now();
- 
-    // floating-point duration: no duration_cast needed
-    std::chrono::duration<double, std::micro> fp_us = t2 - t1;
- 
-    // integral duration: requires duration_cast
-    //auto int_us = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
- 
-    cout << nTriggers<< " triggers in " << fp_us.count() << " us"<<endl;
+    digitalWrite(DAQHalt,1);
+    auto t1 = std::chrono::high_resolution_clock::now();    
 
-    double trig_rate = nTriggers / fp_us.count(); 
-
-    cout<<"Trigger frequency: "<<trig_rate*1000<<" kHz"<<endl;
-    
+    // READ SRAM 
+    ResetCounters();
+    int N1 = 0; // count until Trg1Cnt goes high
+    while(ReadPin(Trg1Cnt)==0){
+        ToggleSlowClock();
+        N1++; 
     }
+
+    cout<<"Trg1Cnt Memory Depth: "<<N1<<endl;
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t1-t0);
+    double tDiff = duration.count();
+
+    double nTrigs =  double(pow(2,11) - N1);  
+    cout<<nTrigs<<" in "<<tDiff<<" microseconds"<<std::endl;
+	cout<<nTrigs/tDiff<<"kHz"<<endl;
+    */
+
+
+   //ResetCounters(); // takes 3 uS 
+}
 
 // test code to bypass the trigger and just read data out of the 
 // SRAM at one snapshot of time while all triggers 
@@ -188,9 +241,10 @@ bool testCalibPulse(bool ch1, int nSamples = 100){
     
     // initialize the component 
     BiasDAC DAC1 = BiasDAC(1); 
-    //BiasDAC DAC2 = BiasDAC(2); 
+    BiasDAC DAC2 = BiasDAC(2); 
 
     DAC1.SetVoltage(220);
+    DAC2.SetVoltage(1); 
     delayMicroseconds(10000);
 
     cout<<"Starting test samples"<<endl;
@@ -200,11 +254,11 @@ bool testCalibPulse(bool ch1, int nSamples = 100){
     int event = 0; 
     while(event < nEvents){
         cout<<event<<endl;
-        StartSampling(false, true, false); 
+        StartSampling(false, false, true); 
         delayMicroseconds(200); 
 
         ToggleCalibPulse(); 
-
+ 
         while (ReadPin(OEbar) == 1);
 
         digitalWrite(DAQHalt,1);
@@ -222,8 +276,44 @@ bool testCalibPulse(bool ch1, int nSamples = 100){
 }
 
 bool testIO(){
-    IO GPIO = IO(); 
-    GPIO.setClock(20);
+    IO test_IO = IO(); 
+    test_IO.setClock(20);
+}
+
+void testDIGIO(){
+
+    DIGIO digio_test(2); 
+
+    int ntests = 1000;
+    double times[ntests]; 
+    int nErrors = 0;
+
+    for(int i = 0; i!=ntests; i++){
+
+        unsigned int test_byte = 0b1<<(i%8); 
+
+        digio_test.setIOState(test_byte);
+        auto t0 = std::chrono::high_resolution_clock::now(); 
+        unsigned int result = digio_test.readIOState(); 
+        auto t1 = std::chrono::high_resolution_clock::now();  
+        
+        if(test_byte!=result){nErrors++;}
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t1-t0);
+        double tDiff = duration.count();
+        times[i] = tDiff; 
+        WriteDouble(tDiff,"WriteTimes_1000.csv");
+        digio_test.setIOState(0b0);
+    }
+
+    int sum = 0;
+
+    for (auto& n : times){
+        sum += n;
+    }
+    float average = sum/ntests;
+
+    cout<<"Average read time: "<<average<<" microseconds"<<endl;
+    cout<<nErrors<<" errors in "<<ntests<<" reads"<<endl;
 }
 
 int main(int argc, char **argv){
@@ -249,7 +339,7 @@ int main(int argc, char **argv){
             }
 
             else if (arg == "GPIO"){
-                cout<<"Running GPIO Test"<<endl;
+                cout<<"Running IO Test"<<endl;
                 testIO();
             }
 
@@ -257,6 +347,18 @@ int main(int argc, char **argv){
                 setupComponents();
                 cout<<"Running Pulse Test"<<endl;
                 testCalibPulse(true); 
+            }
+
+            else if (arg == "TrgRate"){
+                setupComponents(); 
+                cout<<"Running trigger rate test"<<endl;
+                testTrigRate(); 
+            }
+
+            else if (arg == "DIGIO"){
+                setupComponents(); 
+                cout<<"Running GPIO Expander Test"<<endl;
+                testDIGIO(); 
             }
 
             else{

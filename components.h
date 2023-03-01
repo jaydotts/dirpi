@@ -94,11 +94,16 @@ class DIGIO{
         // add Pi handle + wPi addr
          int channel; 
          unsigned addr; 
-         unsigned DIGIOfd; 
+         unsigned fd; 
     
     public:
-        DIGIO( int chan);
-        ~DIGIO();
+        DIGIO(int chan);
+        void setConfigReg(unsigned int write_byte);
+        void setPolarityReg(unsigned int write_byte);
+        void setIOState(unsigned int write_byte);
+        unsigned int readIOState(); 
+        void writePin(int pin);
+        void readPin(int pin);
 };
 
 

@@ -1,16 +1,13 @@
-
 #include "io.cpp"
 using namespace std;
 
 
 // begin data recording 
-void takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, bool saveData, bool plotData){
+void takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, bool saveData, bool plotData, const char* output_fname = "outputfile.txt"){
 
   // extrg - whether or not to enable external triggers 
   // sftrg - whether or not to trigger using software trigger 
   // trg1 and trg2 - enable triggering on either of these channels 
-
-  const char* output_fname = "outputfile.txt";
 
   // enable trigger based on passed parameter 
   // todo: set trigEns low 
@@ -21,17 +18,16 @@ void takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, bool sa
     // Toggle SLWCLCK high, Reset counters, Deassert DAQHalt
     // to enable sampling mode
     StartSampling(extrg,trg1,trg2); 
-    delayMicroseconds(200);
     
     if (sftrg){
       cout<<"Triggering"<<endl;
-      delayMicroseconds(500); 
+      delayMicroseconds(100); 
       SoftwareTrigger();
     }
 
     // sit and wait for a trigger to come along 
     while (ReadPin(OEbar) == 1);
-    
+
     // hold DAQHalt high to stop data recording when trigger comes
     // (dead time starts now) ====================================== **
     // TODO: Record dead time 
@@ -46,6 +42,14 @@ void takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, bool sa
     }
 }
 
+void CosmicCatcher(bool extrg, bool sftrg, bool trg1, bool trg2, int nFiles, int nEvents){
+
+  for(int i = 0; i<nFiles; i++){
+    const char* fname = ("Cosmics_"+std::to_string(i)+".txt").c_str(); 
+    takeData(extrg, sftrg, trg1, trg2, nEvents, false, false, fname);
+  };
+}
+
 int main(){
   
   LoadRunConfiguration("config/digi.config");
@@ -55,7 +59,9 @@ int main(){
   digitalWrite(PSCL,1);
 
   //takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, bool saveData, bool plotData)
-  takeData(false, false, true, false, nEvents, false, false);
+  //takeData(true, true, false, false, nEvents, false, false);
+
+  CosmicCatcher(true, true, false, false, nEvents, 10);
 
   return 0;
 

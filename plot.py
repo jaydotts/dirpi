@@ -103,8 +103,8 @@ def plot_waveforms(data, maxPlotNum, chan1, chan2):
 
         # if only waveforms, 
         
-        minvalx = 1000
-        maxvalx = 1060
+        minvalx = 100
+        maxvalx = 3000
         
         if(wf_only): 
             # return loc of rising/falling edge of waveform
@@ -113,8 +113,10 @@ def plot_waveforms(data, maxPlotNum, chan1, chan2):
 
         else:
             plt.xticks(np.linspace(0,4096,5))
-            if(chan1): axs[event].plot(bitNum[minvalx:maxvalx],ch1Data[minvalx:maxvalx],'--',label = 'CH1',color='grey')
-            if(chan1): axs[event].scatter(bitNum[minvalx:maxvalx],ch1Data[minvalx:maxvalx],marker='x',color='red')
+            if(chan1): axs[event].plot(bitNum[minvalx:maxvalx],ch1Data[minvalx:maxvalx],'--',label = 'CH1',color='red',alpha=0.5)
+            #if(chan1): axs[event].scatter(bitNum[minvalx:maxvalx],ch1Data[minvalx:maxvalx],marker='x',color='red')
+            if(chan2): axs[event].plot(bitNum[minvalx:maxvalx],ch2Data[minvalx:maxvalx],'--',label = 'CH2',color='blue',alpha=0.5)
+            #if(chan2): axs[event].scatter(bitNum[minvalx:maxvalx],ch2Data[minvalx:maxvalx],marker='x',color='blue')
             axs[event].legend()
             axs[event].set_ylabel('Counts (/255)')
             axs[event].set_title(f"Event {event}")
@@ -132,7 +134,7 @@ def plot_waveforms(data, maxPlotNum, chan1, chan2):
 eventNums, data = parse_output(file)
 
 print("plotting histograms")
-plot_histograms(data, True, False)
+plot_histograms(data, True, True)
 
 print("plotting waveforms")
 plot_waveforms(data, 5, True, True)

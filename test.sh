@@ -1,6 +1,6 @@
 
 make clean 
-make main
+make test
 
 #python3 plot.py
 

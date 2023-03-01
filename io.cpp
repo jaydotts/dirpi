@@ -97,23 +97,23 @@ void StartSampling(bool extrg, bool trg1, bool trg2)
   digitalWrite(Trg2En, 0);
   digitalWrite(Trg2En, 0);
 
-  // Enable sampling (then wait to clear out stale data)
-  digitalWrite(DAQHalt,0);
-  digitalWrite(DAQHalt,0);
-  digitalWrite(DAQHalt,0);
-
   // Reset counters 
   ResetCounters();
-  ResetCounters(); 
   ResetCounters();
+  ResetCounters();
+  cout<<"counters reset"<<endl;
 
   // Reset all MX bits back to 0
   digitalWrite(MX0,0);
   digitalWrite(MX1,0);
   digitalWrite(MX2,0);
   
+  cout<<"Writing DAQHalt low"<<endl;
+  digitalWrite(DAQHalt,0);
+  digitalWrite(DAQHalt,0);
+  digitalWrite(DAQHalt,0);
   // Wait ~ 210 uS for 20MHz clock)
-  delayMicroseconds(1);
+  delayMicroseconds(210);
 
   // Enable triggers 
   if (trg1) {
@@ -123,12 +123,13 @@ void StartSampling(bool extrg, bool trg1, bool trg2)
   }
 
   if (trg2) {
-    digitalWrite(Trg2En, 1);
-    digitalWrite(Trg2En, 1);
-    digitalWrite(Trg2En, 1);
+      digitalWrite(Trg2En, 1);
+      digitalWrite(Trg2En, 1);
+      digitalWrite(Trg2En, 1);
   }
 
   if(extrg){
+    cout<<"Enabling extrg"<<endl;
     digitalWrite(TrgExtEn, 1); 
     digitalWrite(TrgExtEn, 1); 
     digitalWrite(TrgExtEn, 1);  
@@ -255,4 +256,16 @@ void ToggleCalibPulse(){
   delayMicroseconds(1); 
   digitalWrite(Calib, 0); 
   digitalWrite(Calib, 0); 
+}
+
+// Write a double to a csv
+void WriteDouble(double data, const char *fname){
+
+    ofstream myfile (fname,ios::app);
+
+    if (myfile.is_open())
+    {
+        myfile <<data<<","<<endl;;
+        myfile.close();
+    }   
 }

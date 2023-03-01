@@ -154,7 +154,29 @@ EEPROM::EEPROM(){
 ////////////////////////////////////// DIGIO
 DIGIO::DIGIO(int chan){
     channel = chan; 
-    DIGIOfd = wiringPiI2CSetup(addr);
+    if (chan == 1)
+        addr = 0x38; 
+    else if (chan == 2)
+        addr = 0x39; 
+
+    fd = wiringPiI2CSetup(addr);
+    if (fd == -1) cerr<<"Unable to setup device at "<<addr<<endl;
+};
+
+void DIGIO::setConfigReg(unsigned int write_byte){
+    int result = wiringPiI2CWriteReg8(fd,3,write_byte);
+};
+
+void DIGIO::setIOState(unsigned int write_byte){
+    int result = wiringPiI2CWriteReg8(fd,1,write_byte);
+};
+
+unsigned int DIGIO::readIOState(){
+    return wiringPiI2CReadReg8(fd,1); 
+}
+
+void DIGIO::setPolarityReg(unsigned int write_byte){
+    int result = wiringPiI2CWriteReg8(fd,2,write_byte);
 };
 
 ////////////////////////////////////// GPIO EXPANDER
