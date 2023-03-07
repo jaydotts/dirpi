@@ -59,9 +59,9 @@ int main(){
   digitalWrite(PSCL,1);
 
   //takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, bool saveData, bool plotData)
-  //takeData(true, true, false, false, nEvents, false, false);
+  takeData(extrg, sftrg, trg1, trg2, nEvents, false, false);
 
-  CosmicCatcher(true, true, false, false, nEvents, 10);
+  //CosmicCatcher(true, true, false, false, nEvents, 10);
 
   return 0;
 

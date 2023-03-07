@@ -244,7 +244,7 @@ bool testCalibPulse(bool ch1, int nSamples = 100){
     BiasDAC DAC2 = BiasDAC(2); 
 
     DAC1.SetVoltage(220);
-    DAC2.SetVoltage(1); 
+    DAC2.SetVoltage(220); 
     delayMicroseconds(10000);
 
     cout<<"Starting test samples"<<endl;
@@ -254,7 +254,7 @@ bool testCalibPulse(bool ch1, int nSamples = 100){
     int event = 0; 
     while(event < nEvents){
         cout<<event<<endl;
-        StartSampling(false, false, true); 
+        StartSampling(false, true, true); 
         delayMicroseconds(200); 
 
         ToggleCalibPulse(); 

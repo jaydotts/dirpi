@@ -72,7 +72,6 @@ int trg1CntAddr, trg2CntAddr; // Address when Trg1Cnt and Trg2Cnt go high.
 int eventNum = 0;
 
 int saveWaveforms = 1000; // Prescale for saving waveforms.  1=all
-int nEvents = 1000; //number of events
 int printScalers = 100; // Prescale for calculating/displaying scalers
 
 int trgCnt[2][2]; // Results of all Trg1Cnt and Trg2Cnt reads. First number is channel, second number is current (0) and previous (1) values
@@ -106,7 +105,22 @@ int PotValCh2 = 0;
 int DACValCh1 = 0; 
 int DACValCh2 = 0;
 
+
+// parameters to load from config 
+bool extrg; 
+bool trg1; 
+bool trg2; 
+bool sftrg; 
+int nEvents;
+int clckspeed; 
+
+bool checkVal(auto name, const char* config_name, auto value, auto parameter){
+   if (name.compare(config_name)==0){cout<<name;}; 
+}
+
 bool LoadRunConfiguration(const char* configFile){
+
+  bool pass = true; 
 
   ifstream cfile(configFile, ios::out);
     if (cfile.is_open()){ //checking whether the file is open
@@ -122,36 +136,56 @@ bool LoadRunConfiguration(const char* configFile){
 
       // parse config file for run settings 
       if (name.compare("nEvents ")==0 ){nEvents = stoi(value);} 
+      if (name.compare("TrgCh1 ")==0 ){trg1 = (bool)stoi(value);}
+      if (name.compare("sftrg ")==0 ){sftrg = (bool)stoi(value);}
+      if (name.compare("clock ")==0 ){
+        int speed = stoi(value);
+        if ((speed == 20)||(speed == 40)){clckspeed = speed;}
+        else pass = false; 
+        }
+
+      // parse config for component settings 
       if (name.compare("DACValCh1 ")==0 ){DACValCh1 = stoi(value);} 
       if (name.compare("DACValCh2 ")==0 ){DACValCh2 = stoi(value);} 
       if (name.compare("PotValCh1 ")==0 ){PotValCh1 = stoi(value);} 
       if (name.compare("PotValCh2 ")==0 ){PotValCh2 = stoi(value);} 
+
+
   
       }
       cfile.close();
+
+      cout<<pass<<endl;
     }
 }
 
-// defunct?
+// Set up I2C components + determine that they exist 
 void setupComponents(){
   cout<<"Initializing components..."<<endl;
   
-  // Setup digipots
-  DIGIPOT Pot1 = DIGIPOT();
-  DIGIPOT Pot2 = DIGIPOT();
+  // Setup pots for DC pedestal setting 
+  DIGIPOT CH1_Ped = DIGIPOT();
+  DIGIPOT CH2_Ped = DIGIPOT();
 
   // Setup threshold DACs
   ThrDAC ThrDAC1 = ThrDAC(1); 
   ThrDAC ThrDAC2 = ThrDAC(2); 
   
+  // Throw a warning if the pedestal is above the trigger threshold? 
+
   // Setup IO expander chip
   //IO GPIO1 = IO(); 
 
   cout<<"POT1: "<<PotValCh1<<endl;
-  Pot1.SetWiper(1, PotValCh1);
-  Pot2.SetWiper(2, PotValCh2); 
+  CH1_Ped.SetWiper(1, PotValCh1);
+  CH2_Ped.SetWiper(2, PotValCh2); 
   ThrDAC1.SetThr(DACValCh1,0); 
   ThrDAC2.SetThr(DACValCh2,0); 
+
+  cout<<"Setting clock speed to "<<clckspeed<<endl;
+    IO clock_IO = IO(); 
+    clock_IO.setClock(clckspeed);
+  
 }
 
 void setupPins(){
@@ -178,24 +212,3 @@ void setupPins(){
   pinMode(PSCL,OUTPUT);
 }
 
-void setupTest(){
-
-    setupPins();
-
-    digitalWrite(TrgExtEn,1);
-    digitalWrite(Trg1En,1);
-    digitalWrite(Trg2En,1);
-    /*
-    * use these to set PWM.
-    * pwmSetRange(n) sets the number of steps in each cycle to be n
-    * pwmWrite(pin, m) sets the number of "ON" steps to be m
-    */
-    pinMode(PSCL,PWM_OUTPUT);
-    pwmSetMode(PWM_MODE_MS);
-    pwmSetRange(1024);
-}
-
-void setupMain(){
-  setupPins(); 
-  // tbd 
-}
