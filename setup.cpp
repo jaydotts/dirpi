@@ -107,10 +107,11 @@ int DACValCh2 = 0;
 
 
 // parameters to load from config 
-bool extrg; 
+//bool extrg; 
 bool trg1; 
 bool trg2; 
-bool sftrg; 
+bool sftrg;
+bool extrg;
 int nEvents;
 int clckspeed; 
 
@@ -138,6 +139,8 @@ bool LoadRunConfiguration(const char* configFile){
       if (name.compare("nEvents ")==0 ){nEvents = stoi(value);} 
       if (name.compare("TrgCh1 ")==0 ){trg1 = (bool)stoi(value);}
       if (name.compare("sftrg ")==0 ){sftrg = (bool)stoi(value);}
+      if (name.compare("extrg ")==0 ){extrg = (bool)stoi(value);} 
+     cout<<"extrg "<<extrg<<endl; 
       if (name.compare("clock ")==0 ){
         int speed = stoi(value);
         if ((speed == 20)||(speed == 40)){clckspeed = speed;}
@@ -174,7 +177,7 @@ void setupComponents(){
   // Throw a warning if the pedestal is above the trigger threshold? 
 
   // Setup IO expander chip
-  //IO GPIO1 = IO(); 
+  IO GPIO1 = IO(); 
 
   cout<<"POT1: "<<PotValCh1<<endl;
   CH1_Ped.SetWiper(1, PotValCh1);
