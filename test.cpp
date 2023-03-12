@@ -282,7 +282,7 @@ bool testIO(){
 
 void testDIGIO(){
 
-    DIGIO digio_test(2); 
+    DIGIO digio_test(1); 
 
     int ntests = 1000;
     double times[ntests]; 

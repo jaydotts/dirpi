@@ -114,6 +114,8 @@ bool sftrg;
 bool extrg;
 int nEvents;
 int clckspeed; 
+float timeout; 
+std::string fname_prefix; 
 
 bool checkVal(auto name, const char* config_name, auto value, auto parameter){
    if (name.compare(config_name)==0){cout<<name;}; 
@@ -140,7 +142,10 @@ bool LoadRunConfiguration(const char* configFile){
       if (name.compare("TrgCh1 ")==0 ){trg1 = (bool)stoi(value);}
       if (name.compare("sftrg ")==0 ){sftrg = (bool)stoi(value);}
       if (name.compare("extrg ")==0 ){extrg = (bool)stoi(value);} 
-     cout<<"extrg "<<extrg<<endl; 
+      if (name.compare("timeout ")==0){timeout = stof(value);}
+      if (name.compare("fname ")==0){fname_prefix = value;}
+
+
       if (name.compare("clock ")==0 ){
         int speed = stoi(value);
         if ((speed == 20)||(speed == 40)){clckspeed = speed;}
@@ -153,7 +158,7 @@ bool LoadRunConfiguration(const char* configFile){
       if (name.compare("PotValCh1 ")==0 ){PotValCh1 = stoi(value);} 
       if (name.compare("PotValCh2 ")==0 ){PotValCh2 = stoi(value);} 
 
-
+      cout<<pass<<endl;
   
       }
       cfile.close();

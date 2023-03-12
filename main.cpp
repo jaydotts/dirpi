@@ -25,27 +25,39 @@ void takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, bool sa
       SoftwareTrigger();
     }
 
-    // sit and wait for a trigger to come along 
-    while (ReadPin(OEbar) == 1);
+    cout<<timeout<<endl;
+    float max_time = float(timeout*60); 
 
-    // hold DAQHalt high to stop data recording when trigger comes
-    // (dead time starts now) ====================================== **
-    // TODO: Record dead time 
+    auto start = std::chrono::system_clock::now();
+    auto time = std::chrono::system_clock::now();
+
+    std::chrono::duration<double> elapsed_seconds = time-start;
+
+    // sit and wait for a trigger to come along 
+    while (ReadPin(OEbar) == 1){
+
+      time = std::chrono::system_clock::now();
+      elapsed_seconds = time-start;
+
+      if (elapsed_seconds.count() > max_time){
+        cout<<"Trigger timed out"<<endl;
+        return;
+        }
+    }
+
     digitalWrite(DAQHalt,1);
 
-    // load SRAM data into global integer array, dataBlock
     readSRAMData(); 
 
-    // dump the event data into the writeFile
     WriteSRAMData(eventNum-1,output_fname);
-    // (end dead time) ============================================= **
+
     }
 }
 
 void CosmicCatcher(bool extrg, bool sftrg, bool trg1, bool trg2, int nFiles, int nEvents){
 
   for(int i = 0; i<nFiles; i++){
-    const char* fname = ("Cosmics_"+std::to_string(i)+".txt").c_str(); 
+    const char* fname = (fname_prefix+std::to_string(i)+".txt").c_str(); 
     takeData(extrg, sftrg, trg1, trg2, nEvents, false, false, fname);
   };
 }
@@ -59,10 +71,11 @@ int main(){
   digitalWrite(PSCL,1);
 
   //takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, bool saveData, bool plotData)
-  takeData(extrg, sftrg, trg1, trg2, nEvents, false, false);
+  //takeData(extrg, sftrg, trg1, trg2, nEvents, false, false);
 
-  //CosmicCatcher(true, true, false, false, nEvents, 10);
+  CosmicCatcher(extrg, sftrg, trg1, trg2, nEvents, 10);
 
+  cout<<"Finishing up..."<<endl;
   return 0;
 
 }
