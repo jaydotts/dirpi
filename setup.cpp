@@ -140,6 +140,7 @@ bool LoadRunConfiguration(const char* configFile){
       // parse config file for run settings 
       if (name.compare("nEvents ")==0 ){nEvents = stoi(value);} 
       if (name.compare("TrgCh1 ")==0 ){trg1 = (bool)stoi(value);}
+      if (name.compare("TrgCh2 ")==0 ){trg1 = (bool)stoi(value);}
       if (name.compare("sftrg ")==0 ){sftrg = (bool)stoi(value);}
       if (name.compare("extrg ")==0 ){extrg = (bool)stoi(value);} 
       if (name.compare("timeout ")==0){timeout = stof(value);}
