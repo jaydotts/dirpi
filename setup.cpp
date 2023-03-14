@@ -114,6 +114,7 @@ bool sftrg;
 bool extrg;
 int nEvents;
 int clckspeed; 
+int events_per_file;
 float timeout; 
 std::string fname_prefix; 
 
@@ -137,15 +138,16 @@ bool LoadRunConfiguration(const char* configFile){
             auto value = line.substr(delimiterPos + 1);
             std::cout << name << " " << value << '\n';
 
-      // parse config file for run settings 
       if (name.compare("nEvents ")==0 ){nEvents = stoi(value);} 
+      if (name.compare("events_per_file ")==0){events_per_file = stoi(value);}
       if (name.compare("TrgCh1 ")==0 ){trg1 = (bool)stoi(value);}
       if (name.compare("TrgCh2 ")==0 ){trg2 = (bool)stoi(value);}
       if (name.compare("sftrg ")==0 ){sftrg = (bool)stoi(value);}
       if (name.compare("extrg ")==0 ){extrg = (bool)stoi(value);} 
       if (name.compare("timeout ")==0){timeout = stof(value);}
-      if (name.compare("fname ")==0){fname_prefix = value;}
-
+      if (name.compare("fname ")==0){
+        cout<<"File name: "<<value<<endl; 
+        fname_prefix = value;}
 
       if (name.compare("clock ")==0 ){
         int speed = stoi(value);
@@ -158,8 +160,6 @@ bool LoadRunConfiguration(const char* configFile){
       if (name.compare("DACValCh2 ")==0 ){DACValCh2 = stoi(value);} 
       if (name.compare("PotValCh1 ")==0 ){PotValCh1 = stoi(value);} 
       if (name.compare("PotValCh2 ")==0 ){PotValCh2 = stoi(value);} 
-
-      cout<<pass<<endl;
   
       }
       cfile.close();

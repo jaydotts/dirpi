@@ -3,16 +3,18 @@ using namespace std;
 
 
 // begin data recording 
-void takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, bool saveData, bool plotData, const char* output_fname = "outputfile.txt"){
+void takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, int max_events){
 
-  // extrg - whether or not to enable external triggers 
-  // sftrg - whether or not to trigger using software trigger 
-  // trg1 and trg2 - enable triggering on either of these channels 
-
-  // enable trigger based on passed parameter 
-  // todo: set trigEns low 
+  int nfile = 0; 
+  const char* output_fname = (fname_prefix+std::to_string(nfile)+".txt").c_str();
 
   while(eventNum < nEvents){
+
+    if ((eventNum!=0) & (eventNum % max_events == 0)){  
+      nfile++;
+      output_fname  = (fname_prefix+std::to_string(nfile)+".txt").c_str(); 
+    };
+
     cout<<eventNum<<endl;
 
     // Toggle SLWCLCK high, Reset counters, Deassert DAQHalt
@@ -25,7 +27,7 @@ void takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, bool sa
       SoftwareTrigger();
     }
 
-    cout<<timeout<<endl;
+    // start timer - ensure trigger does not time out
     float max_time = float(timeout*60); 
 
     auto start = std::chrono::system_clock::now();
@@ -43,7 +45,7 @@ void takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, bool sa
         cout<<"Trigger timed out"<<endl;
         return;
         }
-    }
+    };
 
     digitalWrite(DAQHalt,1);
 
@@ -52,14 +54,6 @@ void takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, bool sa
     WriteSRAMData(eventNum-1,output_fname);
 
     }
-}
-
-void CosmicCatcher(bool extrg, bool sftrg, bool trg1, bool trg2, int nFiles, int nEvents){
-
-  for(int i = 0; i<nFiles; i++){
-    const char* fname = (fname_prefix+std::to_string(i)+".txt").c_str(); 
-    takeData(extrg, sftrg, trg1, trg2, nEvents, false, false, fname);
-  };
 }
 
 int main(){
@@ -71,9 +65,8 @@ int main(){
   digitalWrite(PSCL,1);
 
   //takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, bool saveData, bool plotData)
-  //takeData(extrg, sftrg, trg1, trg2, nEvents, false, false);
-
-  CosmicCatcher(extrg, sftrg, trg1, trg2, nEvents, 10);
+  cout<<nEvents<<endl;
+  takeData(extrg, sftrg, trg1, trg2, nEvents, events_per_file);
 
   cout<<"Finishing up..."<<endl;
   return 0;
