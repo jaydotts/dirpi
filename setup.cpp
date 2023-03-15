@@ -118,10 +118,6 @@ int events_per_file;
 float timeout; 
 std::string fname_prefix; 
 
-bool checkVal(auto name, const char* config_name, auto value, auto parameter){
-   if (name.compare(config_name)==0){cout<<name;}; 
-}
-
 bool LoadRunConfiguration(const char* configFile){
 
   bool pass = true; 

@@ -46,34 +46,45 @@ else
     mkdir $fpath;
 fi
 
+
+################# FUNCTIONS 
 check_size()
 {
     echo $1
     mfs=$(du $1 | awk '{ print $1}' | tail -1) # size in bytes
-    max=200
+    max=10000
     dir=`pwd`
 
     echo "Checking size of $1 : $mfs"
 
-    if [ "$mfs" -gt "$max" ]; then 
+    if [ "$mfs" -gt "$max" ]; then # check that file is not above critical size 
 
         echo "Unloading"
+        count=0
 
-        if [ ! -d "$1/overflow/" ]; then 
-            mkdir "$1/overflow/";
-        fi 
+        while [ -f "$1/overflow_$count.zip" ]; do
+            ((count++))
+        done 
 
-        (cd $1 && ls -tp | grep -v '/$' | tail -n +2 |  xargs  -i  mv  '{}'  "$1/overflow/")
+        echo $count
+        mkdir "$1/overflow_$count";
+
+        # list all data in destination directory, move all but current file into overflow
+        (cd $1 && ls -tp *.txt | grep -v '/$' | tail -n +1 |  xargs  -i  mv  '{}'  "$1/overflow_$count")
+        zip -jr "$1/overflow_$count.zip" "$1/overflow_$count"
+        rm -rf "$1/overflow_$count"
+
     fi
 }
 
 export -f check_size 
 watch_file(){
-    watch -n 0.02 -x bash -c "check_size $1"
+    watch -n 5 -x bash -c "check_size $1"
 }
 
 #python3 plot.py
 
+#################### PROGRAM EXECUTION 
 make clean 
 make main
 

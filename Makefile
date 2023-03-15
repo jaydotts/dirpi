@@ -12,7 +12,6 @@ test:
 
 main: 
 	$(CC) $(CFLAGS ) main.cpp -o main -lwiringPi
-	sudo ./main
 
 clean: 
 	rm test || true

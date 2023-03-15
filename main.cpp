@@ -3,16 +3,18 @@ using namespace std;
 
 
 // begin data recording 
-void takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, int max_events){
+void takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, int max_events, const char* output_folder){
 
   int nfile = 0; 
-  const char* output_fname = (fname_prefix+std::to_string(nfile)+".txt").c_str();
+  cout<<"nfile:"<<std::to_string(nfile)<<endl;
+  std::string output_fname = fname_prefix+std::to_string(nfile)+".txt";
+  cout<<"fname: "<<output_fname<<endl;
 
   while(eventNum < nEvents){
 
     if ((eventNum!=0) & (eventNum % max_events == 0)){  
       nfile++;
-      output_fname  = (fname_prefix+std::to_string(nfile)+".txt").c_str(); 
+      output_fname = fname_prefix+std::to_string(nfile)+".txt";
     };
 
     cout<<eventNum<<endl;
@@ -43,6 +45,7 @@ void takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, int max
 
       if (elapsed_seconds.count() > max_time){
         cout<<"Trigger timed out"<<endl;
+        eventNum = nEvents; 
         return;
         }
     };
@@ -51,14 +54,33 @@ void takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, int max
 
     readSRAMData(); 
 
-    WriteSRAMData(eventNum-1,output_fname);
+    WriteSRAMData(eventNum-1,(std::string(output_folder)+"/"+output_fname).c_str());
 
     }
 }
 
-int main(){
+int main(int argc, char* argv[]){
   
-  LoadRunConfiguration("config/digi.config");
+    printf("Running %s", argv[0]);
+
+
+    const char * config_fpath;
+    const char * output_folder;
+
+    if (argc < 3){
+      printf("\nRequired arguments config file path [1] or output folder [2] not found\n");
+      printf("Exiting...\n");
+      return 0; 
+    };
+
+    if (argc >= 3) {
+      config_fpath = argv[1]; 
+      output_folder = argv[2];
+      cout<<"\nUsing config file "<<config_fpath<<endl;
+      cout<<"Output folder name: "<<output_folder<<endl;
+    }
+
+  LoadRunConfiguration(config_fpath);
 
   setupPins();
   setupComponents();
@@ -66,7 +88,7 @@ int main(){
 
   //takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, bool saveData, bool plotData)
   cout<<nEvents<<endl;
-  takeData(extrg, sftrg, trg1, trg2, nEvents, events_per_file);
+  takeData(extrg, sftrg, trg1, trg2, nEvents, events_per_file, output_folder);
 
   cout<<"Finishing up..."<<endl;
   return 0;
