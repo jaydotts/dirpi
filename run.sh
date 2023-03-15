@@ -52,21 +52,19 @@ check_size()
 {
     echo $1
     mfs=$(du $1 | awk '{ print $1}' | tail -1) # size in bytes
-    max=10000
+    max=100000
     dir=`pwd`
 
-    echo "Checking size of $1 : $mfs"
+    #echo "Checking size of $1 : $mfs"
 
     if [ "$mfs" -gt "$max" ]; then # check that file is not above critical size 
 
-        echo "Unloading"
         count=0
 
         while [ -f "$1/overflow_$count.zip" ]; do
             ((count++))
         done 
 
-        echo $count
         mkdir "$1/overflow_$count";
 
         # list all data in destination directory, move all but current file into overflow
@@ -79,7 +77,8 @@ check_size()
 
 export -f check_size 
 watch_file(){
-    watch -n 5 -x bash -c "check_size $1"
+    watch -n 30 -x bash -c "check_size $1"
+    exit;
 }
 
 #python3 plot.py
@@ -88,8 +87,7 @@ watch_file(){
 make clean 
 make main
 
-./main $config_file $output_folder & 
-watch_file $fpath 
-
+watch_file $fpath $1 &
+./main $config_file $output_folder 
 
 echo 'done'
