@@ -3,14 +3,14 @@ using namespace std;
 
 
 // begin data recording 
-void takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, int max_events, const char* output_folder){
+void takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int max_events, const char* output_folder){
 
   int nfile = 0; 
   cout<<"nfile:"<<std::to_string(nfile)<<endl;
   std::string output_fname = fname_prefix+std::to_string(nfile)+".txt";
   cout<<"fname: "<<output_fname<<endl;
 
-  while(eventNum < nEvents){
+  while(true){
 
     if ((eventNum!=0) & (eventNum % max_events == 0)){  
       nfile++;
@@ -88,7 +88,7 @@ int main(int argc, char* argv[]){
 
   //takeData(bool extrg, bool sftrg, bool trg1, bool trg2, int nEvents, bool saveData, bool plotData)
   cout<<nEvents<<endl;
-  takeData(extrg, sftrg, trg1, trg2, nEvents, events_per_file, output_folder);
+  takeData(extrg, sftrg, trg1, trg2, events_per_file, output_folder);
 
   cout<<"Finishing up..."<<endl;
   return 0;
