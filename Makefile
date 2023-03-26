@@ -1,19 +1,17 @@
 # Makefile
+# use make -j2 to run last two simultaneously
 CC = g++
 CFLAGS = -O 
 
+all: compiler runner manager 
 
-all: test main
-	$(CC) $(CFLAGS) test.cpp main.cpp
+compiler: 
+	$(CC) $(CFLAGS ) test.cpp -o run
 
-test: 
-	$(CC) $(CFLAGS ) test.cpp -o test -lwiringPi
-	sudo ./test 
+# make sure to change this to the code path on the device!
+runner: run
+	/Users/jhoward/Research/test_stuff/run
 
-main: 
-	$(CC) $(CFLAGS ) main.cpp -o main -lwiringPi
-
-clean: 
-	rm test || true
-	rm main || true 
-	rm outputfile.txt || true
+# make sure to change this to the code path on the device! 
+manager: checkFileSize.sh
+	/Users/jhoward/Research/test_stuff/checkFileSize.sh
