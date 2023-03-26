@@ -68,7 +68,7 @@ check_size()
         mkdir "$1/overflow_$count";
 
         # list all data in destination directory, move all but current file into overflow
-        (cd $1 && ls -tp *.txt | grep -v '/$' | tail -n +1 |  xargs  -i  mv  '{}'  "$1/overflow_$count")
+        (cd $1 && ls -tp *.txt | grep -v '/$' | tail -n +2 |  xargs  -i  mv  '{}'  "$1/overflow_$count")
         zip -jr "$1/overflow_$count.zip" "$1/overflow_$count"
         rm -rf "$1/overflow_$count"
 
