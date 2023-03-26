@@ -104,6 +104,7 @@ int PotValCh1 = 0;
 int PotValCh2 = 0;
 int DACValCh1 = 0; 
 int DACValCh2 = 0;
+std::string output_folder = "DATA"; 
 
 
 // parameters to load from config 
@@ -132,22 +133,29 @@ bool LoadRunConfiguration(const char* configFile){
             auto delimiterPos = line.find("=");
             auto name = line.substr(0, delimiterPos);
             auto value = line.substr(delimiterPos + 1);
-            std::cout << name << " " << value << '\n';
+            //std::cout << name << " " << value << '\n';
 
-      if (name.compare("nEvents ")==0 ){nEvents = stoi(value);} 
-      if (name.compare("events_per_file ")==0){events_per_file = stoi(value);}
-      if (name.compare("TrgCh1 ")==0 ){trg1 = (bool)stoi(value);}
-      if (name.compare("TrgCh2 ")==0 ){trg2 = (bool)stoi(value);}
-      if (name.compare("sftrg ")==0 ){sftrg = (bool)stoi(value);}
-      if (name.compare("extrg ")==0 ){extrg = (bool)stoi(value);} 
-      if (name.compare("timeout ")==0){timeout = stof(value);}
-      if (name.compare("fname ")==0){
-        cout<<"File name: "<<value<<endl; 
-        fname_prefix = value;}
-
+//      if (name.compare("nEvents ")==0 ){nEvents = stoi(value);} 
+      if (name.compare("events_per_file ")==0){events_per_file = stoi(value);
+          std::cout << name << " " << events_per_file << '\n';}
+      if (name.compare("TrgCh1 ")==0 ){trg1 = (bool)stoi(value);
+          std::cout << name << " " << trg1 << '\n';}
+      if (name.compare("TrgCh2 ")==0 ){trg2 = (bool)stoi(value);
+          std::cout << name << " " << trg2 << '\n';}
+      if (name.compare("sftrg ")==0 ){sftrg = (bool)stoi(value);
+          std::cout << name << " " << sftrg << '\n';}
+      if (name.compare("extrg ")==0 ){extrg = (bool)stoi(value);
+          std::cout << name << " " << extrg << '\n';} 
+      if (name.compare("timeout ")==0){timeout = stof(value);
+          std::cout << name << " " << timeout << '\n';}
+      if (name.compare("output_folder ")==0){
+        cout<<"Changing from defualt "<<output_folder<<" to "<<value<<endl;
+        output_folder = value;
+          std::cout << name << " " << output_folder << '\n';}
       if (name.compare("clock ")==0 ){
         int speed = stoi(value);
-        if ((speed == 20)||(speed == 40)){clckspeed = speed;}
+        if ((speed == 20)||(speed == 40)){clckspeed = speed;
+            std::cout << name << " " << speed << '\n';}
         else pass = false; 
         }
 

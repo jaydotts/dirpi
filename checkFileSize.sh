@@ -3,9 +3,9 @@
 dir=`pwd`
 compression_point=1000
 abs_max=100000000
-USB_DIRECTORY="$dir/Dummy"
+USB_DIRECTORY="$dir/Fake_USB"
 
-fullpath="$dir/Dummy"
+#fullpath="$dir/DiRPi0_DATA"
 
 rawdata_size=$(du -I '*.gz' $fullpath | awk '{ print $1}' | tail -1) # size in bytes
 folder_size=$(du $fullpath | awk '{ print $1}' | tail -1) # size in bytes
@@ -50,9 +50,9 @@ echo "Size of $fullpath is $rawdata_size bytes"
 chunks_compressed=0
 while [ true ]; do
 
-    fullpath="$dir/Dummy"
+    fullpath="$dir/DiRPi0_DATA"
 
-    rawdata_size=$(du -I '*.gz' $fullpath | awk '{ print $1}' | tail -1) # size in bytes
+    rawdata_size=$(du --exclude='*.gz' $fullpath | awk '{ print $1}' | tail -1) # size in bytes
     folder_size=$(du $fullpath | awk '{ print $1}' | tail -1) # size in bytes
 
     echo "Size of $fullpath is $rawdata_size bytes"
