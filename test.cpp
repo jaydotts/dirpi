@@ -234,6 +234,22 @@ bool testDigiPot(bool chan1 = true, bool chan2 = true){
     return true;
 };
 
+bool testSiPMBias(int chan){
+    cout<<"Testing SiPM Bias setting"<<endl;
+
+    DIGIPOT BiasPOT = DIGIPOT(); 
+
+    for(int i = 0; i<255; i++){
+        int count = 0; 
+        BiasPOT.SetWiper(3,i); 
+        while (count<1){
+            sleep(1); 
+            cout<<count<<endl;
+            count++; 
+        }
+    }
+};
+
 bool testCalibPulse(bool ch1, int nSamples = 100){
 
     bool PULSE_OK = false; 
@@ -321,8 +337,7 @@ int main(int argc, char **argv){
     setupPins();
 
     // Replace this with a test run config file
-    LoadRunConfiguration("config/test_config.config");
-
+    //LoadRunConfiguration("config/cs-137.config");
     for (int i = 1; i < argc; ++i){
 
         string arg = argv[i];
@@ -359,6 +374,12 @@ int main(int argc, char **argv){
                 setupComponents(); 
                 cout<<"Running GPIO Expander Test"<<endl;
                 testDIGIO(); 
+            }
+
+            else if (arg == "SIPM"){
+                setupComponents(); 
+                cout<<"Running test of SiPM Bias setting"<<endl;
+                testSiPMBias(1); 
             }
 
             else{

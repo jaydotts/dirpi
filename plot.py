@@ -12,7 +12,7 @@ import matplotlib
 
 ########################### params
 # target filename
-file = "outputfile.txt"
+file = "DiRPi0_DATA_DRY/30-03-2023_01:35:500.txt"
 
 # In[2]:
 

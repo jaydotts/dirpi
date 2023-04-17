@@ -102,6 +102,8 @@ int PSCLduty = 1;      // OUTPUT (PWM). Used to prescale the number of CH1 OR CH
 
 int PotValCh1 = 0;
 int PotValCh2 = 0;
+int PotValCh3 = 0; 
+int PotValCh4 = 0; 
 int DACValCh1 = 0; 
 int DACValCh2 = 0;
 std::string output_folder = "DATA"; 
@@ -164,6 +166,8 @@ bool LoadRunConfiguration(const char* configFile){
       if (name.compare("DACValCh2 ")==0 ){DACValCh2 = stoi(value);} 
       if (name.compare("PotValCh1 ")==0 ){PotValCh1 = stoi(value);} 
       if (name.compare("PotValCh2 ")==0 ){PotValCh2 = stoi(value);} 
+      if (name.compare("PotValCh3 ")==0 ){PotValCh3 = stoi(value);} 
+      if (name.compare("PotValCh4 ")==0 ){PotValCh4 = stoi(value);} 
   
       }
       cfile.close();
@@ -179,6 +183,8 @@ void setupComponents(){
   // Setup pots for DC pedestal setting 
   DIGIPOT CH1_Ped = DIGIPOT();
   DIGIPOT CH2_Ped = DIGIPOT();
+  DIGIPOT SiPM1_Bias = DIGIPOT();
+  DIGIPOT SiPM2_Bias = DIGIPOT();
 
   // Setup threshold DACs
   ThrDAC ThrDAC1 = ThrDAC(1); 
@@ -192,6 +198,8 @@ void setupComponents(){
   cout<<"POT1: "<<PotValCh1<<endl;
   CH1_Ped.SetWiper(1, PotValCh1);
   CH2_Ped.SetWiper(2, PotValCh2); 
+  SiPM1_Bias.SetWiper(3,PotValCh3); 
+  SiPM2_Bias.SetWiper(4, PotValCh4);
   ThrDAC1.SetThr(DACValCh1,0); 
   ThrDAC2.SetThr(DACValCh2,0); 
 
