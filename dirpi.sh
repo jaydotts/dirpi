@@ -1,5 +1,6 @@
 
-cd /home/dirpi0/ucsb-digitizer/
+cd /home/dirpi4/digi_refactor/
+output_folder="OUTPUTS"
 
 kill_recurse() {
     cpids=`pgrep -P $1|xargs`
@@ -15,16 +16,13 @@ case $1 in
     start)
         make compiler
 
-        if [ ! -d "DiRPi0_DATA" ]; then 
-            mkdir "DiRPi0_DATA"
+        if [ ! -d "$output_folder" ]; then 
+            mkdir "$output_folder"
             wait
         fi
         touch "pid.txt"
-        make -j2 & pid=$!
+        make -j4 & pid=$!
         echo "pid=$pid" > pid.txt
-
-        sleep 100 
-        sudo pkill -P $pid
         ;;
 
     stop) 
@@ -38,12 +36,12 @@ case $1 in
         wait
         make compiler
 
-        if [ ! -d "DiRPi0_DATA" ]; then 
-            mkdir "DiRPi0_DATA"
+        if [ ! -d "$output_folder" ]; then 
+            mkdir "$output_folder"
             wait
         fi
         touch "pid.txt"
-        make -j2 & pid=$!
+        make -j4 & pid=$!
         echo "pid=$pid" > pid.txt
         ;;
 
