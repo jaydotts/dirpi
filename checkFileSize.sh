@@ -3,7 +3,7 @@
 dir=`pwd`
 compression_point=$(echo '10^3' | bc)
 abs_max=$(echo '10^11' | bc) 
-#fullpath="$dir/DiRPi0_DATA"
+output_folder="OUTPUTS"
 
 echo $abs_max
 rawdata_size=$(du --exclude='*.gz' $fullpath | awk '{ print $1}' | tail -1) # size in bytes
@@ -11,21 +11,22 @@ folder_size=$(du $fullpath | awk '{ print $1}' | tail -1) # size in bytes
 
 moveTo_usb(){
     usb=$(readlink -f /dev/disk/by-id/usb-* | while read dev;do mount | grep "$dev\b" | awk '{print $3}'; done)
-    if [ -d "$usb" ]; then 
-        echo "Copying to usb" 
-        if [ -d "$usb/DiRPi0_DATA" ]; then 
-            while [ -f "$usb/$1" ]; do 
-                ((chunks_compressed++))
-            done 
-            mv $1 Data_$chunks_compressed.zip
-        else 
-            mkdir "$usb/DiRPi0_DATA"
-        fi
-
-        mv $1 "$usb/DiRPi0_DATA/Data_$chunks_compressed.zip"
-    else 
-        echo "No stick found. Storing data locally..."
+    if [ ! -d "$usb" ]; then 
+        echo "NO USB INSERTED - DATA NOT SAVED" 
+        rm $1 
+        return
     fi 
+
+    echo "Copying to usb" 
+    if [ ! -d "$usb/$output_folder" ]; then 
+        mkdir "$usb/$output_folder"
+    fi
+	
+	while [ -f "$usb/$output_folder/Data_$chunks_compressed.zip" ]; do
+            ((chunks_compressed++))
+    done
+
+    mv $1 "$usb/$output_folder/Data_$chunks_compressed.zip"
 } 
 
 compress()
@@ -70,7 +71,7 @@ compress()
 chunks_compressed=0
 while [ true ]; do
 
-    fullpath="$dir/DiRPi0_DATA"
+    fullpath="$dir/$output_folder"
     echo $chunks_compressed
     rawdata_size=$(du --exclude='*.zip' $fullpath | awk '{ print $1}' | tail -1) # size in bytes
     folder_size=$(du $fullpath | awk '{ print $1}' | tail -1) # size in bytes
