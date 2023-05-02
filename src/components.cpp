@@ -238,13 +238,38 @@ void GPIO::setClock(int speed_MHz){
         setConfigReg(0b00000011);
         setIOState(0b00000000);
         delayMicroseconds(3); 
-        setIOState(0b00000001);
+        setIOState(0b00001001);
         setConfigReg(0b00000000);
         cout<<"Clock set to 40MHz"<<endl;
     }
     else{cout<<"Invalid clock speed selected"<<endl;}
 
 };
+
+void GPIO::setTriggerPoint(int setting){
+    /*
+    Sets trigger point between 1 and 2 
+    */
+
+    switch(setting){
+        case 1: 
+            setConfigReg(0b00001100);
+            setIOState(0b00000000);
+            delayMicroseconds(3);   
+            setIOState(0b00000100);
+            setConfigReg(0b00000000);
+            cout<<"Set trigger point to A"<<endl;
+            break;
+        case 2: 
+            setConfigReg(0b00001100);
+            setIOState(0b00000000);
+            delayMicroseconds(3);   
+            setIOState(0b00001000);
+            setConfigReg(0b00000000);
+            cout<<"Set trigger point to B"<<endl;
+            break;
+    }
+}
 
 void GPIO::readPin(int pin){
     int output; 

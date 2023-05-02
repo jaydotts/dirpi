@@ -112,6 +112,7 @@ class GPIO{
     public: 
         GPIO(); 
         void setClock(int speed_MHz); 
+        void setTriggerPoint(int setting); 
         void setConfigReg(unsigned int write_byte);
         void setPolarityReg(unsigned int write_byte);
         void setIOState(unsigned int write_byte);

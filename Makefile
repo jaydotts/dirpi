@@ -7,15 +7,19 @@ CFLAGS = -O
 all: runner manager plotter
 
 compiler: 
-	$(CC) $(CFLAGS ) /src/*.cpp -o main -lwiringPi
+	$(CC) $(CFLAGS ) src/*.cpp -o main -lwiringPi
 
 # make sure to change this to the code path on the device!
 runner: main
-	/home/dirpi4/digi_refactor/main config/digi.config
+#ifeq ($(strip $(RUN)),)
+	/home/dirpi4/digi_refactor/main config/digi.config $(RUN)
+#else
+#/home/dirpi4/digi_refactor/main config/digi.config
+#endif
 
 # make sure to change this to the code path on the device! 
 manager: checkFileSize.sh
-	/home/dirpi4/digi_refactor/checkFileSize.sh
+	/home/dirpi4/digi_refactor/checkFileSize.sh $(RUN)
 
 plotter: 
-	python3 plotter.py
+	python3 gui.py

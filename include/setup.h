@@ -1,3 +1,4 @@
+#include <string>
 #ifndef SETUP_H
 #define SETUP_H
 
@@ -43,12 +44,19 @@ extern int clckspeed;
 
 extern int PSCL;          // OUTPUT (PWM). Used to prescale the number of CH1 OR CH2 triggers accepted.
 extern int PSCLduty;      // OUTPUT (PWM). Used to prescale the number of CH1 OR CH2 triggers accepted.
+extern int events_perFile; 
+extern bool record_data; 
+extern std::string fname_prefix; 
+extern std::string output_folder; 
+extern int run_num; 
 
 void setupPins();
 
 bool setupComponents();
 
 void load_configs(const char * CONFIG_FILE_PATH); 
+
+bool setupFiles(int run_num); 
 
 bool initialize(const char * CONFIG_FILE_PATH);
 

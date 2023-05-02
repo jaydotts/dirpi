@@ -1,6 +1,8 @@
+#!/bin/bash
 
-cd /home/dirpi4/digi_refactor/
-output_folder="OUTPUTS"
+cd /home/dirpi4/digi_refactor
+
+output_folder="Run"$2
 
 kill_recurse() {
     cpids=`pgrep -P $1|xargs`
@@ -14,35 +16,48 @@ kill_recurse() {
 
 case $1 in 
     start)
-        make compiler
+        if [ ! -z "$2" ]; then 
+            make compiler 
+            if [ ! -d "$output_folder" ]; then 
+                mkdir "$output_folder"
+                wait
+            fi
+            make -j4 RUN=$2
 
-        if [ ! -d "$output_folder" ]; then 
-            mkdir "$output_folder"
-            wait
+        else
+            make compiler
+            make runner
         fi
-        touch "pid.txt"
-        make -j4 & pid=$!
-        echo "pid=$pid" > pid.txt
         ;;
 
     stop) 
-        . "pid.txt"
-        sudo pkill -P $pid
+        touch ".stop" 
+        echo "Stopping..."
+        sleep 3
+        rm ".stop"
+        exit
         ;;
 
     restart)
-        . "pid.txt"
-        sudo pkill -P $pid
-        wait
-        make compiler
+        touch ".stop" 
+        echo "Stopping..."
+        sleep 3
+        rm ".stop"
+        
+        echo "Restarting..." 
+        
+        if [ ! -z "$2" ]; then 
+            make compiler 
+            if [ ! -d "$output_folder" ]; then 
+                mkdir "$output_folder"
+                wait
+            fi
+            make -j4 RUN=$2
 
-        if [ ! -d "$output_folder" ]; then 
-            mkdir "$output_folder"
-            wait
+        else
+            make compiler
+            make runner
         fi
-        touch "pid.txt"
-        make -j4 & pid=$!
-        echo "pid=$pid" > pid.txt
         ;;
 
     *) 

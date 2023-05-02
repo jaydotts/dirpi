@@ -1,5 +1,6 @@
 #include "../include/setup.h"
 #include "../include/components.h"
+#include "../include/io.h"
 #include <iostream>
 #include <fstream>
 #include <wiringPi.h>
@@ -42,7 +43,11 @@ int DACValCh1 = 0;
 int DACValCh2 = 0;
 int clckspeed = 20; 
 int PSCL = 1; 
-std::string output_folder = "DATA"; 
+int events_perFile = 1; 
+bool record_data = false; 
+int run_num; 
+std::string fname_prefix;
+std::string output_folder;
 
 void setupPins(){
     /* Setup pins to use WiringPi library and I2C */ 
@@ -66,6 +71,9 @@ void setupPins(){
     pinMode(Trg2En,OUTPUT);
     pinMode(PSCL,OUTPUT);
 
+    // set channel prescale
+    digitalWrite(PSCL,1);
+
 }
 
 bool setupComponents(){
@@ -82,8 +90,9 @@ bool setupComponents(){
     // GPIO lines used to set clock speed
     GPIO IO_1 = GPIO(); 
     IO_1.setClock(clckspeed); 
+    //IO_1.setTriggerPoint(1); 
 
-    return true; 
+    return true;
 }
 
 void load_configs(const char * CONFIG_FILE_PATH){
@@ -110,9 +119,9 @@ void load_configs(const char * CONFIG_FILE_PATH){
                 std::cout << name << " " << sftrg << '\n';}
             if (name.compare("extrg ")==0 ){extrg = (bool)stoi(value);
                 std::cout << name << " " << extrg << '\n';} 
-            if (name.compare("output_folder ")==0){
-            output_folder = value;
-                std::cout << name << " " << output_folder << '\n';}
+            if (name.compare("events_per_file ")==0){
+            events_perFile = stoi(value);
+                std::cout << name << " " << events_perFile << '\n';}
             if (name.compare("clock ")==0 ){
                 int speed = stoi(value);
                 if ((speed == 20)||(speed == 40)){clckspeed = speed;
@@ -131,6 +140,20 @@ void load_configs(const char * CONFIG_FILE_PATH){
     }
 }
 
+bool setupFiles(int run_num){
+    /*
+    Sets up file naming conventions and does directory checks 
+    */
+
+    fname_prefix = "Run"+std::to_string(run_num);
+    output_folder = "Run"+std::to_string(run_num);
+
+    if(ispath(output_folder.c_str())){
+        record_data=true; 
+    }
+    return true; 
+}
+
 bool initialize(const char * CONFIG_FILE_PATH){
 
     /// load variables from configuration file 
@@ -142,6 +165,7 @@ bool initialize(const char * CONFIG_FILE_PATH){
     
     /// Create component objects & initialize them 
     setupComponents(); 
+    setupFiles(run_num);
 
     return true; 
 }

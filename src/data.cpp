@@ -3,6 +3,7 @@
 #include "../include/setup.h"
 #include <iostream>
 #include <fstream>
+#include <sys/stat.h>
 
 void Data::read_bytes(){
     /*
@@ -62,29 +63,29 @@ void Data::Write(const char *fname){
     char data_buffer[50];
     char plot_buffer[50]; 
     sprintf(plot_buffer, "plot_buffer.txt");
-    sprintf(data_buffer, fname);
+    if(record_data){sprintf(data_buffer, fname);}
 
     plot_output = fopen(plot_buffer,"w");
-
-    if(!isfile(data_buffer)){
+ 
+    if(!isfile(data_buffer) && record_data){
         OutputFile = fopen(data_buffer , "w ");
     }
-    else{
+    else if(record_data){
         OutputFile = fopen(data_buffer , "a");
     } 
-
+    
+    if(record_data){
+        fprintf(OutputFile,("TIME " + getTime()+"\n").c_str());}
+        
     for (int i=0; i<addressDepth; i++) {
-        //fprintf(OutputFile, "DATA: %i  %i %i %i\n", eventNum, i, 
-        //        dataBlock[0][i],dataBlock[1][i]);
+        if (record_data){
+            fprintf(OutputFile, "DATA: %i  %i %i %i\n", eventNum, i, 
+                    dataBlock[0][i],dataBlock[1][i]);}
+
         fprintf(plot_output, "%i %i %i\n", i, 
                 dataBlock[0][i],dataBlock[1][i]);
     }
 
-    fclose(OutputFile);
+    if(record_data){fclose(OutputFile);}
     fclose(plot_output);
-}
-
-bool isfile(const char *fileName){
-    std::ifstream infile(fileName);
-    return infile.good();
 }

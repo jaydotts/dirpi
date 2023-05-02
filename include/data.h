@@ -19,7 +19,4 @@ class Data{
         void Write(const char *fname); 
 };
 
-// Some helper functions for data management 
-bool isfile(const char *fileName); 
-
 #endif

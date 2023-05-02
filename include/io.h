@@ -1,3 +1,4 @@
+#include <string>
 #ifndef IO_H
 #define IO_H
 
@@ -12,5 +13,11 @@ int ReadPin(int iPin);
 void ToggleSlowClock(); 
 
 void reset_MUX(); 
+
+std::string getTime(); 
+
+bool isfile (const std::string& name); 
+
+bool ispath (const char * path); 
 
 #endif

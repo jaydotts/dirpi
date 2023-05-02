@@ -2,10 +2,12 @@
 #include "../include/setup.h"
 #include <wiringPi.h>
 #include <wiringPiI2C.h>
+#include <sys/stat.h>
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <ctime>
+#include <chrono> 
 using namespace std; 
 
 int ReadPin(int iPin) // Read a wPi pin with error checking
@@ -60,4 +62,24 @@ void reset_MUX(){
     digitalWrite(MX0,0);
     digitalWrite(MX1,0);
     digitalWrite(MX2,0);
+}
+
+string getTime(){
+    /*
+    Returns UNIX time in ms as a string
+    */
+    std::chrono::milliseconds ms = std::chrono::duration_cast< std::chrono::milliseconds >(
+    std::chrono::system_clock::now().time_since_epoch());
+    std::string str(std::to_string(ms.count()));
+    return str; 
+}
+
+bool isfile (const std::string& name) {
+  struct stat buffer;   
+  return (stat (name.c_str(), &buffer) == 0); 
+}
+
+bool ispath(const char * path){
+    struct stat sb;
+    return (stat(path, &sb) == 0);
 }
