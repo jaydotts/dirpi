@@ -4,9 +4,16 @@ import pyqtgraph as pg
 import time
 from PyQt5 import QtCore, QtGui, QtWidgets
 import sys
+import os
+
+with open ('config/digi.config', 'rt') as myfile:  # Open lorem.txt for reading
+    for myline in myfile:              # For each line, read to a string,
+        if 'memory_depth' in myline: 
+            depth = re.findall('[0-9]+', myline)
+            MEMORY_DEPTH=int(depth[0])
 
 def readData():
-    data = np.zeros((4096,3))
+    data = np.zeros((MEMORY_DEPTH,3))
     with open("plot_buffer.txt",'r') as f: 
         lines = f.readlines()
     f.close()
@@ -27,9 +34,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.graphWidget = pg.PlotWidget()
         self.setCentralWidget(self.graphWidget)
 
-        self.x = np.arange(4096)
-        self.ch1_data = np.zeros(4096)
-        self.ch2_data = np.zeros(4096)
+        self.x = np.arange(MEMORY_DEPTH)
+        self.ch1_data = np.zeros(MEMORY_DEPTH)
+        self.ch2_data = np.zeros(MEMORY_DEPTH)
 
         self.graphWidget.setRange(yRange=(0,255))
         self.graphWidget.showGrid(True, True)
@@ -49,6 +56,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def update_plot_data(self):
 
+        if os.path.isfile(f"{os.getcwd()}/.stop"): sys.exit()
         #self.x = self.x[1:]  # Remove the first y element.
         #self.x.append(self.x[-1] + 1)  # Add a new value 1 higher than the last.
         data = readData()
@@ -85,6 +93,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
         cboxes.setWidget(w)
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, cboxes)
+
+        # push button
+        self.start_button = QtWidgets.QPushButton("Start", self)
+        self.stop_button = QtWidgets.QPushButton("Stop", self)
+
+        # setting widget to the dock
+        layout.addWidget(self.start_button)
+        layout.addWidget(self.stop_button)
 
 # create plot
 #data = readData(); 
