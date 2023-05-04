@@ -4,6 +4,7 @@
 #include "../include/SRAM.h"
 #include "../include/io.h"
 #include "../include/setup.h"
+#include "../include/testing.h"
 #include <iostream>
 #include <wiringPi.h>
 #include <wiringPiI2C.h>
@@ -18,7 +19,20 @@ Return OK signal if ok
 */
 
 bool POST(){
-    return true; 
+    int test_mode = 1; 
+
+    Testing test(test_mode); 
+
+    if ( not test.is_alive() ){
+         return false;}
+    
+    return (
+        test.i2c_setup() &
+        test.trig_setup() & 
+        test.trig_precision() &
+        test.clock_setting()
+    ); 
+
 }
 
 int main(int argc, char* argv[]){

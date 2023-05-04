@@ -11,11 +11,7 @@ compiler:
 
 # make sure to change this to the code path on the device!
 runner: main
-#ifeq ($(strip $(RUN)),)
 	/home/dirpi4/digi_refactor/main config/digi.config $(RUN)
-#else
-#/home/dirpi4/digi_refactor/main config/digi.config
-#endif
 
 # make sure to change this to the code path on the device! 
 manager: checkFileSize.sh
@@ -23,3 +19,12 @@ manager: checkFileSize.sh
 
 plotter: 
 	python3 gui.py
+
+soft-reset:
+	make -j runner manager RUN=$(RUN)
+
+cleanup: 
+	./checkFileSize $(RUN)
+	@touch ".stop"
+	@sleep 2
+	@rm ".stop"

@@ -24,7 +24,7 @@ const int SFTTRG=7;
 const int TrgExtEn=0;  
 const int Trg1En=2;    
 const int Trg2En=4;
-
+const int PSCL = 1;
 /* 
 Define parameters to be loaded 
 from the config file. Initialize 
@@ -41,8 +41,8 @@ int PotValCh1 = 0;
 int PotValCh2 = 0;
 int DACValCh1 = 0; 
 int DACValCh2 = 0;
-int clckspeed = 20; 
-int PSCL = 1; 
+int clckspeed = 20;  
+int PSCLduty = 1; 
 int events_perFile = 1; 
 bool record_data = false; 
 int run_num; 
@@ -72,7 +72,7 @@ void setupPins(){
     pinMode(PSCL,OUTPUT);
 
     // set channel prescale
-    digitalWrite(PSCL,1);
+    digitalWrite(PSCL,PSCLduty);
 
 }
 
@@ -119,6 +119,8 @@ void load_configs(const char * CONFIG_FILE_PATH){
                 std::cout << name << " " << sftrg << '\n';}
             if (name.compare("extrg ")==0 ){extrg = (bool)stoi(value);
                 std::cout << name << " " << extrg << '\n';} 
+            if (name.compare("Prescale ")==0 ){PSCLduty = stoi(value);
+                std::cout << name << " " << PSCLduty << '\n';} 
             if (name.compare("events_per_file ")==0){
             events_perFile = stoi(value);
                 std::cout << name << " " << events_perFile << '\n';}

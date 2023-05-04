@@ -41,6 +41,10 @@ compress()
 }
 
 chunks_compressed=0
+if [ ! -d $fullpath ]; then 
+    exit
+fi 
+
 while [ ! -f ".stop" ]; do
     compress $fullpath
 done

@@ -133,7 +133,7 @@ void DIGIPOT::SetWiper(int chan, int N){
     unsigned int write_byte = (N & 0xFF);
     int result = wiringPiI2CWriteReg8(fd,wiper_reg,write_byte);
 
-    cout<<"Writing N="<<N<<" to channel "<<chan<<" pot "<< (result ? "Failed" : "Succeeded")<<endl;
+    cout<<"Writing N="<<N<<" to channel "<<chan<<" pot "<< (result ? "\033[1;31mFAILED\033[0m" : "Succeeded")<<endl;
 };
 
 void DIGIPOT::setInputBias(int chan, double voltage){

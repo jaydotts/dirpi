@@ -1,18 +1,6 @@
 #!/bin/bash
 
-cd /home/dirpi4/digi_refactor
-
 output_folder="Run"$2
-
-kill_recurse() {
-    cpids=`pgrep -P $1|xargs`
-    for cpid in $cpids;
-    do
-        kill_recurse $cpid
-    done
-    echo "killing $1"
-    kill -9 $1
-}
 
 case $1 in 
     start)
@@ -59,6 +47,18 @@ case $1 in
             make runner
         fi
         ;;
+    
+    start-soft)
+        echo "[WARNING]: Code is not be re-compiled."
+        echo "Configuration changes WILL be loaded" 
+        if [ ! -z "$2" ]; then 
+            if [ ! -d "$output_folder" ]; then 
+                mkdir "$output_folder"
+                wait
+            fi
+        fi
+        make soft-reset RUN=$2
+    ;;
 
     *) 
         echo "Nothing to do"
