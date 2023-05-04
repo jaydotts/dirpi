@@ -20,13 +20,27 @@ g++ -O digi.cpp -o digi -lwiringPi
 
 ## Installation
 Software requirements can be found in ***requirements.txt***. 
+This software package also depends on the WiringPi library, which is depracated. The necessary packages are included in the repository's 'build' folder. 
+
+To install, simply navigate to the dirpi directory where the code will be run and run 
+
+```
+./build.sh
+```
 
 ## Usage  
-The digitizer driver software is split into (?) translation units: 
-- ***components.h***: class definitions for all board components
-- ***components.cpp***: implementations of all board components 
-- ***io.cpp***: methods for fast read/write of component data
-- ***test.cpp***: self-test routines 
+To start a fresh data acquisition, use the command 
+```
+./dirpi.sh start <run_number>
+```
+
+If provided, the *run_number* argument will be used to generate an output directory called Run<run_number>. If not supplied, data will not be saved. The user interface will still work in this mode. 
+
+To stop a run, use the command 
+```
+./dirpi.sh stop
+```
+which will stop all processes other than the gui, which is stopped manually by the user. 
 
 ## Support
 
