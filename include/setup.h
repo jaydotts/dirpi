@@ -44,7 +44,6 @@ extern int DACValCh2;
 extern int clckspeed; 
 extern int PSCLduty;
 extern int events_perFile; 
-extern const int address_depth; 
 extern bool record_data; 
 extern std::string fname_prefix; 
 extern std::string output_folder; 

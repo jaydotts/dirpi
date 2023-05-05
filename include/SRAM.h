@@ -9,7 +9,7 @@ depth, etc.
 
 class SRAM{
     private: 
-        int memory_depth = 4096; 
+        int memory_depth = 65536; 
     public: 
         void enable_sampling();
 };

@@ -230,7 +230,7 @@ void GPIO::setClock(int speed_MHz){
         setConfigReg(0b00000011);
         setIOState(0b00000000);
         delayMicroseconds(3); 
-        setIOState(0b00000010);
+        setIOState(0b00001010);
         setConfigReg(0b00000000);
         cout<<"Clock set to 20MHz"<<endl;
     }
