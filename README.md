@@ -11,13 +11,6 @@ Driver software package for [two-channel waveform digitizer for x-ray detector](
 - [Support](#support)
 - [Contributing](#contributing)
 
-## Start 
-digi.cpp uses the wiringPi library for fast GPIO access. To compile, open terminal to directory with digi.cpp and run
-```
-g++ -O digi.cpp -o digi -lwiringPi
-```
-
-
 ## Installation
 Software requirements can be found in ***requirements.txt***. 
 This software package also depends on the WiringPi library, which is depracated. The necessary packages are included in the repository's 'build' folder. 
