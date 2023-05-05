@@ -42,8 +42,9 @@ extern int PotValCh2;
 extern int DACValCh1; 
 extern int DACValCh2;
 extern int clckspeed; 
-extern int PSCLduty;      // OUTPUT (PWM). Used to prescale the number of CH1 OR CH2 triggers accepted.
+extern int PSCLduty;
 extern int events_perFile; 
+extern const int address_depth; 
 extern bool record_data; 
 extern std::string fname_prefix; 
 extern std::string output_folder; 

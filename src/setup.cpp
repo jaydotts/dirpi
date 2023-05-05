@@ -121,6 +121,9 @@ void load_configs(const char * CONFIG_FILE_PATH){
                 std::cout << name << " " << extrg << '\n';} 
             if (name.compare("Prescale ")==0 ){PSCLduty = stoi(value);
                 std::cout << name << " " << PSCLduty << '\n';} 
+            if (name.compare("address_depth ")==0 ){
+                const int address_depth = stoi(value);
+                std::cout << name << " " << address_depth << '\n';} 
             if (name.compare("events_per_file ")==0){
             events_perFile = stoi(value);
                 std::cout << name << " " << events_perFile << '\n';}

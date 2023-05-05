@@ -3,9 +3,8 @@
 
 class Testing{
     /*
-    Handles tests of all features prior to 
-    running an event. Should generate a logfile 
-    along with stdout outputs. 
+    Handles power-on self testing of i2c 
+    devices and trigger settings
 
     TEST MODES: 
     [1] Run All Tests 

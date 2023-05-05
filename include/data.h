@@ -7,10 +7,9 @@ helper functions from the IO class
 
 class Data{
     private: 
-        int addressDepth = 4096;
         int dataCH1, dataCH2; 
         int dataBits[2][8]; 
-        int dataBlock[2][4096];
+        int dataBlock[2][address_depth];
 
     public: 
         int eventNum = 0; 
