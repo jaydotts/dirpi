@@ -11,11 +11,11 @@ compiler:
 
 # make sure to change this to the code path on the device!
 runner: main
-	/home/dirpi4/digi_refactor/main config/digi.config $(RUN)
+	/home/dirpi4/dirpi/main config/digi.config $(RUN)
 
 # make sure to change this to the code path on the device! 
 manager: checkFileSize.sh
-	/home/dirpi4/digi_refactor/checkFileSize.sh $(RUN)
+	/home/dirpi4/dirpi/checkFileSize.sh $(RUN)
 
 plotter: 
 	python3 gui.py

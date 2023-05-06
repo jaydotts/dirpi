@@ -12,6 +12,6 @@ class Logging{
         void log_err(const char * error_message); 
         void log_info(const char * info_message);
         void print(const char * print_message); 
-}
+};
 
 #endif
