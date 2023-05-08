@@ -39,6 +39,8 @@ bool extrg = true;  /* Enable extrg by default */
 
 int PotValCh1 = 0;
 int PotValCh2 = 0;
+int PotValCh3 = 0;
+int PotValCh4 = 0;
 int DACValCh1 = 0; 
 int DACValCh2 = 0;
 int clckspeed = 20;  
@@ -83,6 +85,8 @@ bool setupComponents(){
     */
     DIGIPOT CH1_POT = DIGIPOT(1, PotValCh1);
     DIGIPOT CH2_POT = DIGIPOT(2, PotValCh2); 
+    DIGIPOT SIPBIAS_1 = DIGIPOT(3, PotValCh3);
+    DIGIPOT SIPBIAS_2 = DIGIPOT(4, PotValCh4); 
 
     ThrDAC ThrDAC1 = ThrDAC(1, DACValCh1, 0); 
     ThrDAC ThrDAC2 = ThrDAC(2, DACValCh2, 0); 
@@ -135,7 +139,8 @@ void load_configs(const char * CONFIG_FILE_PATH){
             if (name.compare("DACValCh2 ")==0 ){DACValCh2 = stoi(value);} 
             if (name.compare("PotValCh1 ")==0 ){PotValCh1 = stoi(value);} 
             if (name.compare("PotValCh2 ")==0 ){PotValCh2 = stoi(value);} 
-
+            if (name.compare("PotValCh3 ")==0 ){PotValCh3 = stoi(value);} 
+            if (name.compare("PotValCh4 ")==0 ){PotValCh4 = stoi(value);} 
         }
 
     cfile.close();
