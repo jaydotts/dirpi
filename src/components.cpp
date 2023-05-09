@@ -227,10 +227,13 @@ void GPIO::setClock(int speed_MHz){
     // set all pins back to READ mode. 
 
     if(speed_MHz == 20){
-        setConfigReg(0b00000011);
+        setConfigReg(0b00001111);
         setIOState(0b00000000);
         delayMicroseconds(3); 
-        setIOState(0b00001010);
+        if (config->address_depth > 4096){
+            setIOState(0b00001110);
+        }
+        else{setIOState(0b00001010);}
         setConfigReg(0b00000000);
         cout<<"Clock set to 20MHz"<<endl;
     }
@@ -238,7 +241,10 @@ void GPIO::setClock(int speed_MHz){
         setConfigReg(0b00000011);
         setIOState(0b00000000);
         delayMicroseconds(3); 
-        setIOState(0b00001001);
+        if (config->address_depth > 4096){
+            setIOState(0b00001101);
+        }
+        else{setIOState(0b00001001);} 
         setConfigReg(0b00000000);
         cout<<"Clock set to 40MHz"<<endl;
     }
