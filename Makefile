@@ -22,7 +22,7 @@ plotter:
 	python3 gui.py
 
 soft-reset:
-	make -j2 runner manager RUN=$(RUN)
+	make -j3 runner manager plotter RUN=$(RUN)
 
 cleanup: 
 	./checkFileSize $(RUN)

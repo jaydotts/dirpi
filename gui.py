@@ -6,7 +6,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 import sys
 
 def readData():
-    data = np.zeros((4096,3))
+    data = np.zeros((65536,3))
     with open("plot_buffer.txt",'r') as f: 
         lines = f.readlines()
     f.close()
@@ -27,9 +27,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.graphWidget = pg.PlotWidget()
         self.setCentralWidget(self.graphWidget)
 
-        self.x = np.arange(4096)
-        self.ch1_data = np.zeros(4096)
-        self.ch2_data = np.zeros(4096)
+        self.x = np.arange(65536)
+        self.ch1_data = np.zeros(65536)
+        self.ch2_data = np.zeros(65536)
 
         self.graphWidget.setRange(yRange=(0,255))
         self.graphWidget.showGrid(True, True)

@@ -45,6 +45,7 @@ case $1 in
         else
             make compiler
             make runner
+	    make plotter
         fi
         ;;
     
