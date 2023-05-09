@@ -3,6 +3,7 @@
 
 CC = g++
 CFLAGS = -O 
+DIR = $(shell pwd)
 
 all: runner manager plotter
 
@@ -11,11 +12,11 @@ compiler:
 
 # make sure to change this to the code path on the device!
 runner: main
-	/home/dirpi01/dirpi/main config/config.ini $(RUN)
+	$(DIR)/main config/config.ini $(RUN)
 
 # make sure to change this to the code path on the device! 
 manager: checkFileSize.sh
-	/home/dirpi01/dirpi/checkFileSize.sh $(RUN)
+	$(DIR)/checkFileSize.sh $(RUN)
 
 plotter: 
 	python3 gui.py
