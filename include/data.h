@@ -1,3 +1,4 @@
+#include "setup.h"
 #ifndef DATA_H
 #define DATA_H
 /*
@@ -7,12 +8,14 @@ helper functions from the IO class
 
 class Data{
     private: 
-        int addressDepth = 65536;
         int dataCH1, dataCH2; 
         int dataBits[2][8]; 
-        int dataBlock[2][65536];
+        int ** dataBlock;
+        int memory_depth; 
 
-    public: 
+    public:  
+        Data(const int address_depth); 
+        ~Data();
         int eventNum = 0; 
         void read_bytes(); 
         void Read();

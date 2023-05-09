@@ -5,6 +5,14 @@
 #include <fstream>
 #include <sys/stat.h>
 
+
+Data::Data(const int mem_depth){
+    memory_depth = mem_depth; 
+    dataBlock = new int*[2]; // dynamic array (size 2) of pointers to int
+    dataBlock[0] = new int[memory_depth];
+    dataBlock[1] = new int[memory_depth];
+}
+
 void Data::read_bytes(){
     /*
     Read data byte from both channels 
@@ -47,7 +55,7 @@ void Data::read_bytes(){
 }
 
 void Data::Read(){
-    for (int i=0; i<addressDepth; i++){
+    for (int i=0; i<memory_depth; i++){
         ToggleSlowClock(); 
         read_bytes(); 
         dataBlock[0][i] = dataCH1;
@@ -63,22 +71,22 @@ void Data::Write(const char *fname){
     char data_buffer[50];
     char plot_buffer[50]; 
     sprintf(plot_buffer, "plot_buffer.txt");
-    if(record_data){sprintf(data_buffer, fname);}
+    if(config->record_data){sprintf(data_buffer, fname);}
 
     plot_output = fopen(plot_buffer,"w");
  
-    if(!isfile(data_buffer) && record_data){
+    if(!isfile(data_buffer) && config->record_data){
         OutputFile = fopen(data_buffer , "w ");
     }
-    else if(record_data){
+    else if(config->record_data){
         OutputFile = fopen(data_buffer , "a");
     } 
     
-    if(record_data){
+    if(config->record_data){
         fprintf(OutputFile,("TIME " + getTime()+"\n").c_str());}
         
-    for (int i=0; i<addressDepth; i++) {
-        if (record_data){
+    for (int i=0; i<memory_depth; i++) {
+        if (config->record_data){
             fprintf(OutputFile, "DATA: %i  %i %i %i\n", eventNum, i, 
                     dataBlock[0][i],dataBlock[1][i]);}
 
@@ -86,6 +94,12 @@ void Data::Write(const char *fname){
                 dataBlock[0][i],dataBlock[1][i]);
     }
 
-    if(record_data){fclose(OutputFile);}
+    if(config->record_data){fclose(OutputFile);}
     fclose(plot_output);
+}
+
+Data::~Data(){
+delete[] dataBlock[0];
+delete[] dataBlock[1];
+delete[] dataBlock;
 }

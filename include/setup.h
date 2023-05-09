@@ -30,33 +30,39 @@ with defaults in case of a read
 problem. 
 */
 
-extern const char* CONFIG_FILE_PATH; 
-
-extern bool trg1; 
-extern bool trg2; 
-extern bool sftrg;
-extern bool extrg;  
-
-extern int PotValCh1;
-extern int PotValCh2;
-extern int DACValCh1; 
-extern int DACValCh2;
-extern int clckspeed; 
-extern int PSCLduty;
-extern int events_perFile; 
-extern bool record_data; 
+extern std::string CONFIG_FILE_PATH; 
 extern std::string fname_prefix; 
 extern std::string output_folder; 
 extern int run_num; 
+
+struct Configuration{
+    bool trg1; 
+    bool trg2; 
+    bool sftrg;
+    bool extrg;
+    long PotValCh1;
+    long PotValCh2;
+    long PotValCh3; 
+    long PotValCh4;
+    long DACValCh1; 
+    long DACValCh2;
+    const int address_depth; 
+    long clckspeed; 
+    long PSCLduty;
+    long events_perFile; 
+    bool record_data;
+}; 
+
+extern Configuration* config; 
 
 void setupPins();
 
 bool setupComponents();
 
-void load_configs(const char * CONFIG_FILE_PATH); 
+Configuration* load_configs(std::string CONFIG_FILE_PATH); 
 
 bool setupFiles(int run_num); 
 
-bool initialize(const char * CONFIG_FILE_PATH);
+bool initialize(std::string CONFIG_FILE_PATH);
 
 #endif

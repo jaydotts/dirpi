@@ -1,8 +1,10 @@
 #include "../include/setup.h"
 #include "../include/components.h"
 #include "../include/io.h"
+#include "../include/INIReader.h"
 #include <iostream>
 #include <fstream>
+#include <stdlib.h>
 #include <wiringPi.h>
 #include <wiringPiI2C.h>
 
@@ -25,29 +27,11 @@ const int TrgExtEn=0;
 const int Trg1En=2;    
 const int Trg2En=4;
 const int PSCL = 1;
-/* 
-Define parameters to be loaded 
-from the config file. Initialize 
-with defaults in case of a read 
-problem. 
-*/
 
-bool trg1 = false; 
-bool trg2 = false; 
-bool sftrg = false;
-bool extrg = true;  /* Enable extrg by default */
-
-int PotValCh1 = 0;
-int PotValCh2 = 0;
-int DACValCh1 = 0; 
-int DACValCh2 = 0;
-int clckspeed = 20;  
-int PSCLduty = 1; 
-int events_perFile = 1; 
-bool record_data = false; 
 int run_num; 
 std::string fname_prefix;
 std::string output_folder;
+Configuration* config; 
 
 void setupPins(){
     /* Setup pins to use WiringPi library and I2C */ 
@@ -72,8 +56,7 @@ void setupPins(){
     pinMode(PSCL,OUTPUT);
 
     // set channel prescale
-    digitalWrite(PSCL,PSCLduty);
-
+    digitalWrite(PSCL,config->PSCLduty);
 }
 
 bool setupComponents(){
@@ -81,65 +64,47 @@ bool setupComponents(){
     Create component objects with initialized 
     values 
     */
-    DIGIPOT CH1_POT = DIGIPOT(1, PotValCh1);
-    DIGIPOT CH2_POT = DIGIPOT(2, PotValCh2); 
+    DIGIPOT CH1_POT = DIGIPOT(1, config->PotValCh1);
+    DIGIPOT CH2_POT = DIGIPOT(2, config->PotValCh2); 
 
-    ThrDAC ThrDAC1 = ThrDAC(1, DACValCh1, 0); 
-    ThrDAC ThrDAC2 = ThrDAC(2, DACValCh2, 0); 
+    ThrDAC ThrDAC1 = ThrDAC(1, config->DACValCh1, 0); 
+    ThrDAC ThrDAC2 = ThrDAC(2, config->DACValCh2, 0); 
 
     // GPIO lines used to set clock speed
     GPIO IO_1 = GPIO(); 
-    IO_1.setClock(clckspeed); 
+    IO_1.setClock(config->clckspeed); 
     //IO_1.setTriggerPoint(1); 
 
     return true;
 }
 
-void load_configs(const char * CONFIG_FILE_PATH){
-    /* 
-    Loads variables with configs from config file. 
-    If required variables are not filled, it returns false. 
-    */
-    ifstream cfile(CONFIG_FILE_PATH, ios::out);
-    if (cfile.is_open()){ //checking whether the file is open
-        string line;
-        while(getline(cfile, line)){ //read data from file object and put it into string.
+Configuration* load_configs(std::string CONFIG_FILE_PATH){
+ 
+    INIReader reader(CONFIG_FILE_PATH); 
 
-            if( line.empty() || line[0] == '#' ){continue;}
-
-            auto delimiterPos = line.find("=");
-            auto name = line.substr(0, delimiterPos);
-            auto value = line.substr(delimiterPos + 1);
-
-            if (name.compare("TrgCh1 ")==0 ){trg1 = (bool)stoi(value);
-                std::cout << name << " " << trg1 << '\n';}
-            if (name.compare("TrgCh2 ")==0 ){trg2 = (bool)stoi(value);
-                std::cout << name << " " << trg2 << '\n';}
-            if (name.compare("sftrg ")==0 ){sftrg = (bool)stoi(value);
-                std::cout << name << " " << sftrg << '\n';}
-            if (name.compare("extrg ")==0 ){extrg = (bool)stoi(value);
-                std::cout << name << " " << extrg << '\n';} 
-            if (name.compare("Prescale ")==0 ){PSCLduty = stoi(value);
-                std::cout << name << " " << PSCLduty << '\n';} 
-            if (name.compare("events_per_file ")==0){
-            events_perFile = stoi(value);
-                std::cout << name << " " << events_perFile << '\n';}
-            if (name.compare("clock ")==0 ){
-                int speed = stoi(value);
-                if ((speed == 20)||(speed == 40)){clckspeed = speed;
-                    std::cout << name << " " << speed << '\n';}
-            }
-
-            // parse config for component settings 
-            if (name.compare("DACValCh1 ")==0 ){DACValCh1 = stoi(value);} 
-            if (name.compare("DACValCh2 ")==0 ){DACValCh2 = stoi(value);} 
-            if (name.compare("PotValCh1 ")==0 ){PotValCh1 = stoi(value);} 
-            if (name.compare("PotValCh2 ")==0 ){PotValCh2 = stoi(value);} 
-
-        }
-
-    cfile.close();
+    if (reader.ParseError() < 0) {
+        std::cout << "Can't load " << CONFIG_FILE_PATH<< "\n";
     }
+    
+    Configuration* conf = new Configuration{
+        .trg1 = reader.GetBoolean("trigger","TrgCh1",0),
+        .trg2 = reader.GetBoolean("trigger","TrgCh2",0),
+        .sftrg = reader.GetBoolean("trigger","sftrg",0),
+        .extrg = reader.GetBoolean("trigger","extrg",1),
+        .PotValCh1 = reader.GetInteger("components","PotValCh1",255),
+        .PotValCh2 = reader.GetInteger("components","PotValCh2",255),
+        .PotValCh3 = reader.GetInteger("components","PotValCh3",255),
+        .PotValCh4 = reader.GetInteger("components","PotValCh4",255),
+        .DACValCh1 = reader.GetInteger("components","DACValCh1",100),
+        .DACValCh2 = reader.GetInteger("components","DACValCh2",100),
+        .address_depth = reader.GetInteger("data","address_depth",4096),
+        .clckspeed = reader.GetInteger("components","clckspeed",20),
+        .PSCLduty = reader.GetInteger("trigger","Prescale",1),
+        .events_perFile = reader.GetInteger("data","events_per_file",100),
+        .record_data = reader.GetBoolean("data","record_data",0)
+    };
+
+    return conf; 
 }
 
 bool setupFiles(int run_num){
@@ -151,15 +116,14 @@ bool setupFiles(int run_num){
     output_folder = "Run"+std::to_string(run_num);
 
     if(ispath(output_folder.c_str())){
-        record_data=true; 
+        config->record_data=true; 
     }
     return true; 
 }
 
-bool initialize(const char * CONFIG_FILE_PATH){
+bool initialize(std::string CONFIG_FILE_PATH){
 
-    /// load variables from configuration file 
-    load_configs(CONFIG_FILE_PATH); 
+    config = load_configs(CONFIG_FILE_PATH);
 
     /// Setup pins to use WiringPi library and I2C
     wiringPiSetup();

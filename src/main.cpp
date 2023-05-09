@@ -9,6 +9,8 @@
 #include <wiringPi.h>
 #include <wiringPiI2C.h>
 #include <ctime>
+#include <stdlib.h>
+#include <string> 
 using namespace std; 
 
 /* 
@@ -39,7 +41,7 @@ int main(int argc, char* argv[]){
 
     if(POST()){
 
-        const char * CONFIG_FILE_PATH = "config/digi.config";
+        std::string CONFIG_FILE_PATH = "config/config.ini";
         
         if(argv[2]){
             run_num = stoi(argv[2]);}
@@ -49,15 +51,16 @@ int main(int argc, char* argv[]){
         initialize(CONFIG_FILE_PATH);
 
         // Initialize objects
-        Data RunData;  
+        Data RunData(config->address_depth);  
         Trigger Trg1 = Trigger(1); 
         Trigger Trg2 = Trigger(2); 
         SRAM RAM;
+
         
         int file_count = 0; 
         while(!isfile(".stop")){ 
 
-            if (RunData.eventNum % events_perFile == 0 & record_data){  
+            if (RunData.eventNum % config->events_perFile == 0 & config->record_data){  
                 // redefine file name after incrementing counter
 
                 output_fname = 
@@ -72,9 +75,9 @@ int main(int argc, char* argv[]){
             RAM.enable_sampling();
 
             // use run configs to enable/disable triggers
-            if(trg1){Trg1.enable();}
-            if(trg2){Trg2.enable();}
-            if(extrg){enable_extrg();}
+            if(config->trg1){Trg1.enable();}
+            if(config->trg2){Trg2.enable();}
+            if(config->extrg){enable_extrg();}
 
             // wait for OE* to go high -> indicates that 
             // trigger runout has gone high 
@@ -89,5 +92,7 @@ int main(int argc, char* argv[]){
             RunData.eventNum++; 
             std::cout << '\r'<<"Events: "<< RunData.eventNum << std::flush;
         }
+
+        free(config);
     }
 }
