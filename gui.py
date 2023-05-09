@@ -83,10 +83,12 @@ class MainWindow(QtWidgets.QMainWindow):
         w.setLayout(layout)
 
         self.c0 = QtWidgets.QCheckBox("CH1 (Y)")
+        self.c0.toggle()
         layout.addWidget(self.c0)
 
         self.c1 = QtWidgets.QCheckBox("CH2 (B)")
         layout.addWidget(self.c1)
+        self.c1.toggle()
 
         spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         layout.addItem(spacerItem)
