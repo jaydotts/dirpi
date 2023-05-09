@@ -66,6 +66,8 @@ bool setupComponents(){
     */
     DIGIPOT CH1_POT = DIGIPOT(1, config->PotValCh1);
     DIGIPOT CH2_POT = DIGIPOT(2, config->PotValCh2); 
+    DIGIPOT CH3_POT = DIGIPOT(3, config->PotValCh3);
+    DIGIPOT CH4_POT = DIGIPOT(4, config->PotValCh4); 
 
     ThrDAC ThrDAC1 = ThrDAC(1, config->DACValCh1, 0); 
     ThrDAC ThrDAC2 = ThrDAC(2, config->DACValCh2, 0); 
