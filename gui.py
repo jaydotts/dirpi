@@ -11,7 +11,7 @@ config = configparser.ConfigParser()
 config.read('config/config.ini')
 plt_window_buff = 10
 
-addr_depth = config['data']['address_depth'] + plt_window_buff
+addr_depth = int(config['data']['address_depth']) + plt_window_buff
 
 def readData():
     data = np.zeros((addr_depth,3))
