@@ -4,9 +4,17 @@ import pyqtgraph as pg
 import time
 from PyQt5 import QtCore, QtGui, QtWidgets
 import sys
+import configparser
+
+
+config = configparser.ConfigParser()
+config.read('config/config.ini')
+plt_window_buff = 10
+
+addr_depth = ['data']['address_depth'] + plt_window_buff
 
 def readData():
-    data = np.zeros((65536,3))
+    data = np.zeros((addr_depth,3))
     with open("plot_buffer.txt",'r') as f: 
         lines = f.readlines()
     f.close()
@@ -27,9 +35,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.graphWidget = pg.PlotWidget()
         self.setCentralWidget(self.graphWidget)
 
-        self.x = np.arange(65536)
-        self.ch1_data = np.zeros(65536)
-        self.ch2_data = np.zeros(65536)
+        self.x = np.arange(addr_depth)
+        self.ch1_data = np.zeros(addr_depth)
+        self.ch2_data = np.zeros(addr_depth)
 
         self.graphWidget.setRange(yRange=(0,255))
         self.graphWidget.showGrid(True, True)
