@@ -46,7 +46,8 @@ struct Configuration{
     long PotValCh4;
     long DACValCh1; 
     long DACValCh2;
-    const int address_depth; 
+    long trigger_pos; 
+    const int memory_depth; 
     long clckspeed; 
     long PSCLduty;
     long events_perFile; 

@@ -104,15 +104,27 @@ class DIGIO{
 
 class GPIO{
     //TCA6408ARGTR
-    //IO expander used to select clock
+    //IO expander used to select clock, trigger point, 
+    //and address depth 
     private: 
          unsigned addr; 
          unsigned fd;
+         // bits that set clckspeed
+         unsigned CLCK_20; 
+         unsigned CLCK_40;
+         // bits to set address depth
+         unsigned ADDR_1; 
+         unsigned ADDR_2;
+         // bits to set trigger point
+         unsigned TRPA; 
+         unsigned TRPB; 
+
     
     public: 
         GPIO(); 
         void setClock(int speed_MHz); 
         void setTriggerPoint(int setting); 
+        void setAddressDepth(int setting); 
         void setConfigReg(unsigned int write_byte);
         void setPolarityReg(unsigned int write_byte);
         void setIOState(unsigned int write_byte);

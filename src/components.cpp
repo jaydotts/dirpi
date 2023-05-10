@@ -198,6 +198,12 @@ void DIGIO::setPolarityReg(unsigned int write_byte){
 ////////////////////////////////////// GPIO EXPANDER
 GPIO::GPIO(){
     addr = 0x21; 
+    CLCK_20 = 0x02;
+    CLCK_40 = 0x01;
+    MEM_FULL = 0x04; 
+    MEM_PART = 0x00; 
+    TRPA = 0x08; 
+    TRPB = 0x10; 
     fd = wiringPiI2CSetup(addr); 
     if (fd == -1) cerr<<"Unable to setup device at "<<addr<<endl;
 };
@@ -227,26 +233,10 @@ void GPIO::setClock(int speed_MHz){
     // set all pins back to READ mode. 
 
     if(speed_MHz == 20){
-        setConfigReg(0b00001111);
-        setIOState(0b00000000);
-        delayMicroseconds(3); 
-        if (config->address_depth > 4096){
-            setIOState(0b00001110);
-        }
-        else{setIOState(0b00001010);}
-        setConfigReg(0b00000000);
-        cout<<"Clock set to 20MHz"<<endl;
+        CLCK_SET = CLCK_20; 
     }
     else if(speed_MHz == 40){ 
-        setConfigReg(0b00000011);
-        setIOState(0b00000000);
-        delayMicroseconds(3); 
-        if (config->address_depth > 4096){
-            setIOState(0b00001101);
-        }
-        else{setIOState(0b00001001);} 
-        setConfigReg(0b00000000);
-        cout<<"Clock set to 40MHz"<<endl;
+        CLCK_SET = CLCK_40; 
     }
     else{cout<<"Invalid clock speed selected"<<endl;}
 
@@ -259,22 +249,40 @@ void GPIO::setTriggerPoint(int setting){
 
     switch(setting){
         case 1: 
-            setConfigReg(0b00001100);
-            setIOState(0b00000000);
-            delayMicroseconds(3);   
-            setIOState(0b00000100);
-            setConfigReg(0b00000000);
+            TRP_SET = TRPA; 
             cout<<"Set trigger point to A"<<endl;
             break;
         case 2: 
-            setConfigReg(0b00001100);
-            setIOState(0b00000000);
-            delayMicroseconds(3);   
-            setIOState(0b00001000);
-            setConfigReg(0b00000000);
+            TRP_SET = TRPB; 
             cout<<"Set trigger point to B"<<endl;
             break;
     }
+}
+
+void GPIO::setMemDepth(int setting){
+    if( setting >= 4096){
+        MEM_SET = MEM_FULL; 
+        cout << "Using full depth" << endl; 
+    }
+    else{
+        MEM_SET = MEM_PART; 
+        cout << "Using partial depth" << endl; 
+    }
+}
+
+void GPIO::set(){
+    setClock(config->clckspeed); 
+    setTriggerPoint(config->trigger_pos); 
+    setMemDepth(config->memory_depth); 
+
+    unsigned io_setting = {
+        CLCK_SET | 
+        MEM_SET  | 
+        TRP_SET
+    };
+    setConfigReg(0x1F); 
+    setIOState(io_setting); 
+    setConfigReg(0x00); 
 }
 
 void GPIO::readPin(int pin){
