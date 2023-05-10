@@ -14,7 +14,7 @@ case $1 in
 
         else
             make compiler
-            make runner
+	    make -j2 runner plotter
         fi
         ;;
 
