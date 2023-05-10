@@ -24,6 +24,6 @@ void SRAM::enable_sampling(){
     digitalWrite(DAQHalt,0);
     digitalWrite(DAQHalt,0);
 
-    delayMicroseconds(210);
+    delayMicroseconds(4000);
     
 }
