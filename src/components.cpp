@@ -206,6 +206,11 @@ GPIO::GPIO(){
     TRPB = 0x10; 
     fd = wiringPiI2CSetup(addr); 
     if (fd == -1) cerr<<"Unable to setup device at "<<addr<<endl;
+
+    /* Initialize settings */
+    CLCK_SET = setClock(config->clckspeed); 
+    TRP_SET = setTriggerPoint(config->trigger_pos); 
+    MEM_SET = setMemDepth(config->memory_depth); 
 };
 
 void GPIO::setConfigReg(unsigned int write_byte){
@@ -225,7 +230,7 @@ void GPIO::setIOState(unsigned int write_byte){
     cout<<result<<endl;
 }
 
-void GPIO::setClock(int speed_MHz){
+unsigned GPIO::setClock(int speed_MHz){
 
     // In order to write to pins, 
     // first set configuration to WRITE mode, 
@@ -233,54 +238,49 @@ void GPIO::setClock(int speed_MHz){
     // set all pins back to READ mode. 
 
     if(speed_MHz == 20){
-        CLCK_SET = CLCK_20; 
+        return CLCK_20; 
     }
     else if(speed_MHz == 40){ 
-        CLCK_SET = CLCK_40; 
+        return CLCK_40;  
     }
-    else{cout<<"Invalid clock speed selected"<<endl;}
-
 };
 
-void GPIO::setTriggerPoint(int setting){
+unsigned GPIO::setTriggerPoint(int setting){
     /*
     Sets trigger point between 1 and 2 
     */
 
     switch(setting){
         case 1: 
-            TRP_SET = TRPA; 
-            cout<<"Set trigger point to A"<<endl;
+            return TRPA; 
             break;
         case 2: 
-            TRP_SET = TRPB; 
+            return TRPB;  
             cout<<"Set trigger point to B"<<endl;
             break;
     }
 }
 
-void GPIO::setMemDepth(int setting){
+unsigned GPIO::setMemDepth(int setting){
     if( setting >= 4096){
-        MEM_SET = MEM_FULL; 
+        return MEM_FULL; 
         cout << "Using full depth" << endl; 
     }
     else{
-        MEM_SET = MEM_PART; 
+        return MEM_PART; 
         cout << "Using partial depth" << endl; 
     }
 }
 
 void GPIO::set(){
-    setClock(config->clckspeed); 
-    setTriggerPoint(config->trigger_pos); 
-    setMemDepth(config->memory_depth); 
-
     unsigned io_setting = {
         CLCK_SET | 
         MEM_SET  | 
         TRP_SET
     };
     setConfigReg(0x1F); 
+    setIOState(0x00); 
+    delayMicroseconds(3); 
     setIOState(io_setting); 
     setConfigReg(0x00); 
 }
