@@ -51,7 +51,7 @@ int main(int argc, char* argv[]){
         initialize(CONFIG_FILE_PATH);
 
         // Initialize objects
-        Data RunData(config->address_depth);  
+        Data RunData(config->memory_depth);  
         Trigger Trg1 = Trigger(1); 
         Trigger Trg2 = Trigger(2); 
         SRAM RAM;

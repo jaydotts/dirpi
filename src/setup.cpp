@@ -100,7 +100,7 @@ Configuration* load_configs(std::string CONFIG_FILE_PATH){
         .DACValCh1 = reader.GetInteger("trigger","DACValCh1",100),
         .DACValCh2 = reader.GetInteger("trigger","DACValCh2",100),
         .trigger_pos = reader.GetInteger("trigger","Position",1),
-        .address_depth = reader.GetInteger("data","address_depth",4096),
+        .memory_depth = reader.GetInteger("data","memory_depth",4096),
         .clckspeed = reader.GetInteger("components","clckspeed",20),
         .PSCLduty = reader.GetInteger("trigger","Prescale",1),
         .events_perFile = reader.GetInteger("data","events_per_file",100),

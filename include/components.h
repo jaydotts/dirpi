@@ -112,19 +112,26 @@ class GPIO{
          // bits that set clckspeed
          unsigned CLCK_20; 
          unsigned CLCK_40;
-         // bits to set address depth
-         unsigned ADDR_1; 
-         unsigned ADDR_2;
+         // bits to set memory depth
+         // high = deep, low = shallow
+         unsigned MEM_FULL;
+         unsigned MEM_PART; 
          // bits to set trigger point
          unsigned TRPA; 
          unsigned TRPB; 
 
+         // settings to pass to component 
+         unsigned CLCK_SET; 
+         unsigned MEM_SET; 
+         unsigned TRP_SET; 
+
     
     public: 
         GPIO(); 
+        void set(); 
         void setClock(int speed_MHz); 
         void setTriggerPoint(int setting); 
-        void setAddressDepth(int setting); 
+        void setMemDepth(int setting); 
         void setConfigReg(unsigned int write_byte);
         void setPolarityReg(unsigned int write_byte);
         void setIOState(unsigned int write_byte);
