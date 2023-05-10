@@ -265,7 +265,7 @@ unsigned GPIO::setTriggerPoint(int setting){
 }
 
 unsigned GPIO::setMemDepth(int setting){
-    if( setting >= 4096){
+    if( setting > 4096){
         return MEM_FULL; 
         cout << "Using full depth" << endl; 
     }
