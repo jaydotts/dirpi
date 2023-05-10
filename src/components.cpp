@@ -202,8 +202,8 @@ GPIO::GPIO(){
     CLCK_40 = 0x01;
     MEM_FULL = 0x04; 
     MEM_PART = 0x00; 
-    TRPA = 0x08; 
-    TRPB = 0x10; 
+    TRPA = 0x10; 
+    TRPB = 0x08; 
     fd = wiringPiI2CSetup(addr); 
     if (fd == -1) cerr<<"Unable to setup device at "<<addr<<endl;
 
