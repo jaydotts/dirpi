@@ -243,6 +243,7 @@ unsigned GPIO::setClock(int speed_MHz){
     else if(speed_MHz == 40){ 
         return CLCK_40;  
     }
+    else return CLCK_20; 
 };
 
 unsigned GPIO::setTriggerPoint(int setting){
@@ -258,6 +259,8 @@ unsigned GPIO::setTriggerPoint(int setting){
             return TRPB;  
             cout<<"Set trigger point to B"<<endl;
             break;
+        default: 
+            return TRPA; 
     }
 }
 
