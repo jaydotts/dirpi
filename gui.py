@@ -3,8 +3,10 @@ import re
 import pyqtgraph as pg
 import time
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QPushButton
 import sys
 import configparser
+import subprocess
 
 
 config = configparser.ConfigParser()
@@ -90,16 +92,63 @@ class MainWindow(QtWidgets.QMainWindow):
         layout.addWidget(self.c1)
         self.c1.toggle()
 
+        self.push_config = QtWidgets.QPushButton("Configure", self)
+        layout.addWidget(self.push_config)
+        self.push_config.clicked.connect(self.open_configs)
+        
+        #self.trigger = QtWidgets.QPushButton(self)
+        #self.trigger.setText("Stop")
+        #layout.addWidget(self.trigger)
+        #self.trigger.clicked.connect(self.toggle_triggers)
+
         spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         layout.addItem(spacerItem)
 
         cboxes.setWidget(w)
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, cboxes)
+    
+    def open_configs(self):                                                                                     
+        dlg = ConfigDialog()
+        dlg.setWindowTitle("HELLO!")
+        dlg.exec()
+    
+    def toggle_triggers(self): 
+        btn_text = self.trigger.text()
+        if btn_text == "Stop":
+            subprocess.run(["./dirpi.sh","stop"])
+            self.trigger.setText("Start")
+        else:
+            subprocess.run(["./dirpi.sh","start-soft"])
+            self.trigger.setText("Stop")
 
-# create plot
-#data = readData(); 
-#plt = pg.plot(data[:,0], data[:,1], title="Plot", pen='r')
-#plt.showGrid(x=True,y=True)
+        
+
+class ConfigDialog(QDialog):
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle("HELLO!")
+        self.layout = QtWidgets.QVBoxLayout()
+        self.le = QtWidgets.QLabel(self)
+        self.le.move(30, 62)
+        self.le.resize(400,22)
+        self.showDialog()
+        #self.setLayout(self.layout)
+
+    
+    def showDialog(self):
+        self.first = QtWidgets.QLineEdit(self)
+        self.second = QtWidgets.QLineEdit(self)
+        buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel, self)
+        layout = QtWidgets.QFormLayout(self)
+        layout.addRow("First text", self.first)
+        layout.addRow("Second text", self.second)
+        layout.addWidget(buttonBox)
+        buttonBox.accepted.connect(self.accept)
+        buttonBox.rejected.connect(self.reject)
+
+    def getInputs(self):
+        return (self.first.text(), self.second.text())
 
 ## Start Qt event loop.
 if __name__ == '__main__':
