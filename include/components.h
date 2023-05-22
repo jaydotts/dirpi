@@ -139,6 +139,20 @@ class GPIO{
         void readPin(int pin);
 };
 
+class DIGI_TEMP{
+    // MCP9808
+    // digital temperature sensor
+    private:
+        unsigned addr; 
+        unsigned fd; 
+        const unsigned temp_reg = 0x05; 
+    
+    public: 
+        DIGI_TEMP();
+        float get_temp(); 
+
+};
+
 // Non-I2C Devices: 
 class MUX{
     private:

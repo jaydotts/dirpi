@@ -292,7 +292,21 @@ void GPIO::readPin(int pin){
     int output; 
     output = wiringPiI2CReadReg8(addr,pin);
     cout<<"Pin "<<pin<<"output: "<<output<<endl;
-};
+}
+
+
+DIGI_TEMP::DIGI_TEMP(){
+    addr = 0x18;
+    fd = wiringPiI2CSetup(addr);
+}
+
+float DIGI_TEMP::get_temp(){
+    int rawTemp = wiringPiI2CReadReg16(fd, temp_reg);
+    // Convert to temperature in Celsius
+    float temperature = ((rawTemp & 0x0FFF) / 16.0);
+
+    return temperature;
+}
 
 // Other: 
 

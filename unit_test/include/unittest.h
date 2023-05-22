@@ -5,7 +5,8 @@ class Unittest{
     
     public: 
         int test_config_loader(); 
-
+        int test_temp_sensor(); 
+        
 };
 
 #endif
