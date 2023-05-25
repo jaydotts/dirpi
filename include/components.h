@@ -146,6 +146,7 @@ class DIGI_TEMP{
         unsigned addr; 
         unsigned fd; 
         const unsigned temp_reg = 0x05; 
+        const unsigned conf_reg = 0x01; 
     
     public: 
         DIGI_TEMP();

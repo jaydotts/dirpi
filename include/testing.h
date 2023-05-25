@@ -21,6 +21,7 @@ class Testing{
         bool trig_setup(); 
         bool trig_precision(); 
         bool clock_setting(); 
+        bool temp_sensor();
 };
 
 #endif

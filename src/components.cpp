@@ -301,9 +301,19 @@ DIGI_TEMP::DIGI_TEMP(){
 }
 
 float DIGI_TEMP::get_temp(){
-    int rawTemp = wiringPiI2CReadReg16(fd, temp_reg);
-    // Convert to temperature in Celsius
-    float temperature = ((rawTemp & 0x0FFF) / 16.0);
+
+    float temperature; 
+    unsigned int temp_byte = wiringPiI2CReadReg16(fd,temp_reg); 
+
+    unsigned int msb = temp_byte >> 8;
+    unsigned int lsb = temp_byte & 0x01; 
+    
+    msb = msb & 0x1F;
+    if ((msb & 0x10) == 0x10){ //TA < 0°C
+        msb = msb & 0x0F; //Clear SIGN
+        temperature = 256 - (msb * 16.0 + lsb / 16.0);
+    }else 
+    temperature = (msb * 16.0 + lsb / 16.0);
 
     return temperature;
 }

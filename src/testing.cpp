@@ -40,3 +40,14 @@ bool Testing::clock_setting(){
     // does clock setting with i/o work? 
     return true; 
 }
+
+bool Testing::temp_sensor(){
+    DIGI_TEMP test_sens = DIGI_TEMP(); 
+    
+    for(int i=0; i<30; i++){
+        cout << test_sens.get_temp() << endl;
+        delayMicroseconds(10000); 
+    };
+
+    return true; 
+}
