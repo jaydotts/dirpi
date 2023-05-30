@@ -46,7 +46,7 @@ bool Testing::temp_sensor(){
     
     for(int i=0; i<30; i++){
         cout << test_sens.get_temp() << endl;
-        delayMicroseconds(10000); 
+        delayMicroseconds(1000000); 
     };
 
     return true; 

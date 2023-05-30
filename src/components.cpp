@@ -302,18 +302,14 @@ DIGI_TEMP::DIGI_TEMP(){
 
 float DIGI_TEMP::get_temp(){
 
-    float temperature; 
-    unsigned int temp_byte = wiringPiI2CReadReg16(fd,temp_reg); 
+    uint16_t temperature_word = wiringPiI2CReadReg16(fd,temp_reg); 
+    uint16_t raw_temperature = ((temperature_word & 0x00FF)<<8) | ((temperature_word & 0xFF00)>>8);
+    float temperature = raw_temperature & 0x0FFF; // extract the first three bytes
+    temperature /= 16.0;
 
-    unsigned int msb = temp_byte >> 8;
-    unsigned int lsb = temp_byte & 0x01; 
-    
-    msb = msb & 0x1F;
-    if ((msb & 0x10) == 0x10){ //TA < 0°C
-        msb = msb & 0x0F; //Clear SIGN
-        temperature = 256 - (msb * 16.0 + lsb / 16.0);
-    }else 
-    temperature = (msb * 16.0 + lsb / 16.0);
+    if(raw_temperature & 0x1000) { // check sign bit
+        temperature -= 256.0;
+	}
 
     return temperature;
 }
