@@ -294,7 +294,6 @@ void GPIO::readPin(int pin){
     cout<<"Pin "<<pin<<"output: "<<output<<endl;
 }
 
-
 DIGI_TEMP::DIGI_TEMP(){
     addr = 0x18;
     fd = wiringPiI2CSetup(addr);

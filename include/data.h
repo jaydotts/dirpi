@@ -1,4 +1,5 @@
 #include "setup.h"
+#include "components.h"
 #ifndef DATA_H
 #define DATA_H
 /*
@@ -12,6 +13,7 @@ class Data{
         int dataBits[2][8]; 
         int ** dataBlock;
         int memory_depth; 
+        DIGI_TEMP tmp_sensor; 
 
     public:  
         Data(const int address_depth); 

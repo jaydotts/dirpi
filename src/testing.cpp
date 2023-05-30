@@ -44,10 +44,12 @@ bool Testing::clock_setting(){
 bool Testing::temp_sensor(){
     DIGI_TEMP test_sens = DIGI_TEMP(); 
     
+    int errs = 0; 
     for(int i=0; i<30; i++){
-        cout << test_sens.get_temp() << endl;
-        delayMicroseconds(1000000); 
+        float temp = test_sens.get_temp(); 
+        if (temp < 0){
+            errs++; 
+        }
     };
-
-    return true; 
+    return bool(!errs); 
 }

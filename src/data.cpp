@@ -11,6 +11,7 @@ Data::Data(const int mem_depth){
     dataBlock = new int*[2]; // dynamic array (size 2) of pointers to int
     dataBlock[0] = new int[memory_depth];
     dataBlock[1] = new int[memory_depth];
+    DIGI_TEMP tmp_sensor = DIGI_TEMP(); 
 }
 
 void Data::read_bytes(){
@@ -83,7 +84,9 @@ void Data::Write(const char *fname){
     } 
     
     if(config->record_data){
-        fprintf(OutputFile,("TIME " + getTime()+"\n").c_str());}
+        fprintf(OutputFile,(
+            "TIME " + getTime()+"\n"+
+            "TEMP " + std::to_string(tmp_sensor.get_temp()) + "\n").c_str());}
         
     for (int i=0; i<memory_depth; i++) {
         if (config->record_data){

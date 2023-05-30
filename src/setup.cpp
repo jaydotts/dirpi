@@ -75,8 +75,6 @@ bool setupComponents(){
     // GPIO lines used to set clock speed
     GPIO IO_1 = GPIO(); 
     IO_1.set(); 
-    //IO_1.setTriggerPoint(1); 
-
     return true;
 }
 

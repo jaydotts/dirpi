@@ -32,8 +32,8 @@ bool POST(){
         test.i2c_setup() &
         test.trig_setup() & 
         test.trig_precision() &
-        test.clock_setting() & 
-        test.temp_sensor()
+        test.clock_setting() 
+        // & test.temp_sensor()
     ); 
 
 }

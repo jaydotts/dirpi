@@ -1,4 +1,5 @@
 #include <string>
+#include "components.h"
 #ifndef SETUP_H
 #define SETUP_H
 
