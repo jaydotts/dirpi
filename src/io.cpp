@@ -83,3 +83,41 @@ bool ispath(const char * path){
     struct stat sb;
     return (stat(path, &sb) == 0);
 }
+
+Timer::Timer(){
+    this->start_time = 0; 
+    this->stop_time = 0;
+}
+
+Timer::Timer(float time){
+    this->start_time = time; 
+    this->stop_time = 0.0; 
+}
+
+void Timer::start(){
+    std::chrono::milliseconds ms = std::chrono::duration_cast< std::chrono::milliseconds >(
+    std::chrono::system_clock::now().time_since_epoch());
+    this->start_time = ms.count(); 
+};
+
+void Timer::stop(){
+    std::chrono::milliseconds ms = std::chrono::duration_cast< std::chrono::milliseconds >(
+    std::chrono::system_clock::now().time_since_epoch());
+    this->stop_time = ms.count(); 
+}
+
+void Timer::clear(){
+    this->start_time = 0; 
+    this->stop_time = 0; 
+}
+
+double Timer::get_duration(){
+    return this->start_time - this->stop_time; 
+}
+
+double Timer::get_time(){
+    std::chrono::milliseconds ms = std::chrono::duration_cast< std::chrono::milliseconds >(
+    std::chrono::system_clock::now().time_since_epoch());
+    double current_time = ms.count(); 
+    return current_time - this->start_time;
+}

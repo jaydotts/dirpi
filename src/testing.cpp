@@ -1,10 +1,10 @@
 #include "../include/testing.h"
 #include "../include/setup.h"
 #include "../include/components.h"
-
+#include "../include/io.h"
+#include <chrono> 
 Testing::Testing(int mode_setting){
     mode = mode_setting; 
-    cout<<"WARNING: POWER-ON TEST NOT YET IMPLEMENTED"<<endl;
 }
 
 bool Testing::is_alive(){
@@ -18,9 +18,18 @@ bool Testing::i2c_setup(){
 }
 
 bool Testing::trig_precision(){ 
-    // what is the trigger precision? 
-    // is it acceptible? 
-    return true; 
+    /* First, set up trigger */
+
+    //Timer timer = Timer(); 
+
+    /* Initialize*/
+    DIGIPOT CH1_PEDESTAL = DIGIPOT(1,255); 
+    DIGIPOT CH2_PEDESTAL = DIGIPOT(2,255); 
+    ThrDAC TestDac1 = ThrDAC(1,0,0); 
+    ThrDAC TestDac2 = ThrDAC(2,0,0); 
+    cout<<"Testing trigger point"<<endl;
+    delayMicroseconds(1000000); 
+
 }
 
 bool Testing::trig_setup(){
@@ -29,9 +38,6 @@ bool Testing::trig_setup(){
     // is it accurate across settings? 
 
     bool is_ok = false; 
-
-    DIGIPOT TestDac1 = DIGIPOT(1,255); 
-    DIGIPOT TestDac2 = DIGIPOT(2,255); 
 
     return true; 
 }

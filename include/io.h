@@ -20,4 +20,18 @@ bool isfile (const std::string& name);
 
 bool ispath (const char * path); 
 
+class Timer{
+    private: 
+        double start_time; 
+        double stop_time; 
+    public: 
+        Timer(); 
+        Timer(float time); 
+        void start(); 
+        void stop(); 
+        void clear(); 
+        double get_duration();
+        double get_time();
+};
+
 #endif
