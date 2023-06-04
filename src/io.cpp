@@ -68,7 +68,7 @@ string getTime(){
     /*
     Returns UNIX time in ms as a string
     */
-    std::chrono::milliseconds ms = std::chrono::duration_cast< std::chrono::milliseconds >(
+    const auto ms = std::chrono::duration_cast< std::chrono::milliseconds >(
     std::chrono::system_clock::now().time_since_epoch());
     std::string str(std::to_string(ms.count()));
     return str; 

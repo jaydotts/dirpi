@@ -10,6 +10,7 @@ case $1 in
                 mkdir "$output_folder"
                 wait
             fi
+            
             make -j4 RUN=$2
 
         else

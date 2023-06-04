@@ -86,7 +86,8 @@ void Data::Write(const char *fname){
     if(config->record_data){
         fprintf(OutputFile,(
             "TIME " + getTime()+"\n"+
-            "TEMP " + std::to_string(tmp_sensor.get_temp()) + "\n").c_str());}
+            "TEMP " + std::to_string(tmp_sensor.get_temp()) + "\n"
+            + PrintConfigs()).c_str());}
         
     for (int i=0; i<memory_depth; i++) {
         if (config->record_data){
@@ -100,6 +101,22 @@ void Data::Write(const char *fname){
     if(config->record_data){fclose(OutputFile);}
     fclose(plot_output);
 }
+
+std::string Data::PrintConfigs(){
+return std::string(
+    "TrgCh1 " + std::to_string(config->trg1) + "\n" +
+    "TrgCh2 " + std::to_string(config->trg2) + "\n" +
+    "sftrg " + std::to_string(config->sftrg) + "\n" +
+    "extrg " + std::to_string(config->extrg) + "\n" +
+    "Prescale " + std::to_string(config->PSCLduty) + "\n" +
+    "Position " + std::to_string(config->trigger_pos) + "\n" +
+    "PotValCh1 " + std::to_string(config->PotValCh1) + "\n" +
+    "PotValCh2 " + std::to_string(config->PotValCh2) + "\n" +
+    "PotValCh3 " + std::to_string(config->PotValCh3) + "\n" + 
+    "PotValCh4 " + std::to_string(config->PotValCh4) + "\n" +
+    "DACValCh1 " + std::to_string(config->DACValCh1) + "\n" +
+    "DACValCh2 " + std::to_string(config->DACValCh2) + "\n" +
+    "clckspeed " + std::to_string(config->clckspeed) + "\n");}
 
 Data::~Data(){
 delete[] dataBlock[0];

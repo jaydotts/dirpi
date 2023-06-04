@@ -29,6 +29,7 @@ const int Trg2En=4;
 const int PSCL = 1;
 
 int run_num; 
+int max_files = (2^31); 
 std::string fname_prefix;
 std::string output_folder;
 Configuration* config; 

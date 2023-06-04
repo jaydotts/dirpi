@@ -35,6 +35,7 @@ extern std::string CONFIG_FILE_PATH;
 extern std::string fname_prefix; 
 extern std::string output_folder; 
 extern int run_num; 
+extern int max_files;
 
 struct Configuration{
     bool trg1; 

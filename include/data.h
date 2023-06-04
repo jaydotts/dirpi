@@ -22,6 +22,7 @@ class Data{
         void read_bytes(); 
         void Read();
         void Write(const char *fname); 
+        std::string PrintConfigs(); 
 };
 
 #endif
