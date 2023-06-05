@@ -11,6 +11,8 @@
 #include <ctime>
 #include <stdlib.h>
 #include <string> 
+#include <iostream>
+#include <fstream>
 using namespace std; 
 
 /* 
@@ -97,5 +99,8 @@ int main(int argc, char* argv[]){
         }
 
         free(config);
+        std::ofstream stop(".stop"); 
+        stop.close();
+        return 1; 
     }
 }

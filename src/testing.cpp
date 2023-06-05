@@ -29,7 +29,7 @@ bool Testing::trig_precision(){
     ThrDAC TestDac2 = ThrDAC(2,0,0); 
     cout<<"Testing trigger point"<<endl;
     delayMicroseconds(1000000); 
-
+    return true; 
 }
 
 bool Testing::trig_setup(){
