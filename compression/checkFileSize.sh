@@ -1,6 +1,6 @@
 #!/bin/bash
 
-dir=`pwd`
+dir="../`pwd`"
 run_num=$1
 output_folder="Run$run_num"
 fullpath="$dir/$output_folder"
@@ -29,8 +29,8 @@ moveTo_usb(){
     fnum=`echo $1 | awk -F'.' '{print $1}' | awk -F'_' '{print $2}'`
     echo "fnum=$fnum"
     cd $fullpath
-    nice ${dir}/DiRPi lossycompress $run_num $fnum
-    nice ${dir}/DiRPi savepulses $run_num $fnum
+    nice ${dir}/compression/DiRPi lossycompress $run_num $fnum
+    nice ${dir}/compression/DiRPi savepulses $run_num $fnum
     sudo mv Run${run_num}_${fnum}.drpw $usb/$output_folder/Run${run_num}_${fnum}.drpw
     sudo mv Run${run_num}_${fnum}.drp $usb/$output_folder/Run${run_num}_${fnum}.drp
     cd -

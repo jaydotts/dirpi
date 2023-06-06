@@ -5,18 +5,18 @@ CC = g++
 CFLAGS = -O 
 DIR = $(shell pwd)
 
-all: runner manager plotter
+all: runner manager
 
 compiler: 
 	$(CC) $(CFLAGS ) src/*.cpp -o main -lwiringPi
 
 # make sure to change this to the code path on the device!
 runner: main
-	$(DIR)/main config/config.ini $(RUN) 10
+	$(DIR)/main config/config.ini $(RUN) 100
 
 # make sure to change this to the code path on the device! 
 manager: checkFileSize.sh
-	$(DIR)/compression/checkFileSize.sh $(RUN)
+	$(DIR)/checkFileSize.sh $(RUN)
 
 plotter: 
 	python3 gui.py
