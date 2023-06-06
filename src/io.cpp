@@ -84,6 +84,22 @@ bool ispath(const char * path){
     return (stat(path, &sb) == 0);
 }
 
+void writeToFile(const char * fname, std::string input){
+    FILE *OutputFile;
+    char data_buffer[50];
+    sprintf(data_buffer, fname);    
+
+    if(!isfile(data_buffer)){
+        OutputFile = fopen(data_buffer , "w ");
+    }
+    else{
+        OutputFile = fopen(data_buffer , "a");
+    } 
+
+    fprintf(OutputFile, input.c_str());
+    fclose(OutputFile);
+}
+
 Timer::Timer(){
     this->start_time = 0; 
     this->stop_time = 0;

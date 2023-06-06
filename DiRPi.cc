@@ -680,6 +680,7 @@ void Run::ReadTXT(int fnum) {
  if (debug) cout << "Opened file "<<fName<<"\n";
  unsigned long long int t; // time
  int evt, iAddr, C1, C2; // values from from file
+ int prvEvt=-1;
  int prevdRunTime = 0;
  string line;
  Event Evt; // Local version of an event that we save and then fill.
@@ -717,7 +718,8 @@ void Run::ReadTXT(int fnum) {
   if (strncmp(line.c_str(),"DATA: ",6)==0) { // DATA: line
     string word = line.substr(6,line.length());  // Cut off "DATA: "
     sscanf(word.c_str(),"%d %d %d %d",&evt, &iAddr, &C1, &C2);
-    if (iAddr == 0 || Evts.size()==0) {
+    if (iAddr == 0 || Evts.size()==0 || evt != prvEvt) {
+      prvEvt = evt;
       Evt.evtNum = evt;
       Evts.push_back(Evt);
       nEvts++;
@@ -1031,7 +1033,7 @@ void Run::ReadRunLine() { // Read a Run header line
   line[i] = 0; // End the string
   int _runnum,_fnum; // We ignore these for now
   sscanf(line,"%d %d %d %d",&_runnum,&_fnum,&clkspeed,&memdepth);
-cout << "Read run="<<_runnum<<" vs "<<runNum<<" _fnum="<<_fnum<<"\n";
+  if (debug) cout << "Read run="<<_runnum<<" vs "<<runNum<<" _fnum="<<_fnum<<"\n";
   inF.read(reinterpret_cast<char *>(&time),sizeof(time)); // Read the run start time
 } // Read a Run header line
 
@@ -1310,7 +1312,7 @@ int main(int argc, char *argv[])
   sscanf(argv[3],"%d",&fnum);
   // Read and process the command from the command line parameters
   if (strncmp(argv[1],"compress",13)==0) { // Compress the file
-    cout << "Compressing Run"<<rnum<<"_"<<fnum<<".txt\n";
+    //cout << "Compressing Run"<<rnum<<"_"<<fnum<<".txt\n";
     lossycompress = 0;
     Run r;
     r.runNum = rnum;
@@ -1320,18 +1322,18 @@ int main(int argc, char *argv[])
     return 0;
   } // Compress the file
   if (strncmp(argv[1],"lossycompress",13)==0) { // Compress the file
-    cout << "LossyCompressing Run"<<rnum<<"_"<<fnum<<".txt\n";
+    //cout << "LossyCompressing Run"<<rnum<<"_"<<fnum<<".txt\n";
     lossycompress = 1;
     Run r;
     r.runNum = rnum;
     r.ReadTXT(fnum);
     r.Proc();
-    r.Dump();
+    //r.Dump();
     r.WriteDRP(fnum,true);
     return 0;
   } // Compress the file
   if (strncmp(argv[1],"savepulses",13)==0) { // Save only pulse information
-    cout << "Saving pulses for Run"<<rnum<<"_"<<fnum<<".txt\n";
+    //cout << "Saving pulses for Run"<<rnum<<"_"<<fnum<<".txt\n";
     Run r;
     r.runNum = rnum;
     r.ReadTXT(fnum);
@@ -1340,7 +1342,7 @@ int main(int argc, char *argv[])
     return 0;
   } // Compress the file
   if (strncmp(argv[1],"uncompress",13)==0) { // Compress the file
-    cout << "Uncompressing Run"<<rnum<<"_"<<fnum<<".drpw\n";
+    //cout << "Uncompressing Run"<<rnum<<"_"<<fnum<<".drpw\n";
     Run r;
     r.runNum = rnum;
     r.ReadDRP(fnum);
@@ -1362,7 +1364,7 @@ int main(int argc, char *argv[])
       } // file loop
     } // Negative fnum implies loop
     else { // Positive fnum
-      cout << "Writing pulse information from Run"<<rnum<<"_"<<fnum<<".drp\n";
+      //cout << "Writing pulse information from Run"<<rnum<<"_"<<fnum<<".drp\n";
       Run r;
       r.runNum = rnum;
       r.ReadDRP(fnum);
@@ -1386,7 +1388,7 @@ int main(int argc, char *argv[])
       } // file loop
     } // Negative fnum implies loop
     else { // Positive fnum
-      cout << "Writing pulse information from Run"<<rnum<<"_"<<fnum<<".drp\n";
+      //cout << "Writing pulse information from Run"<<rnum<<"_"<<fnum<<".drp\n";
       Run r;
       r.runNum = rnum;
       r.ReadDRP(fnum);
@@ -1422,6 +1424,14 @@ int main(int argc, char *argv[])
     }
     return 0;
   } // Display
+  if (strncmp(argv[1],"dump",4)==0) { // Dump
+    Run r;
+    r.runNum = rnum;
+    r.ReadDRP(fnum);
+    r.Dump();
+    r.Clear();
+    return 0;
+  } // Dump
   // If we get here, there was an unexpected command
   cerr << "Unexpected command parameters. Nothing done.\n";
   return 1;

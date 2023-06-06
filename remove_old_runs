@@ -1,0 +1,11 @@
+#!/bin/sh
+RUN=$(tail -n 1 runlist.txt)
+N=0
+RUN=$((RUN-215))
+
+while [ $N -lt $RUN ]
+do
+  echo $N
+  N=$((N+1))
+  rsync -r -z -c --remove-source-files /media/dirpi4/4E79-9470/Run$N/ pmfreeman@tau.physics.ucsb.edu:/net/cms26/cms26r0/pmfreeman/XRD/DiRPi_v3/dirpi4/Run$N
+done

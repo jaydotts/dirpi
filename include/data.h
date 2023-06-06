@@ -14,6 +14,8 @@ class Data{
         int ** dataBlock;
         int memory_depth; 
         DIGI_TEMP tmp_sensor; 
+        int trg1_count; 
+        int trg2_count; 
 
     public:  
         Data(const int address_depth); 
@@ -22,6 +24,7 @@ class Data{
         void read_bytes(); 
         void Read();
         void Write(const char *fname); 
+        void CountTriggers(int nclocks); 
         std::string PrintConfigs(); 
 };
 

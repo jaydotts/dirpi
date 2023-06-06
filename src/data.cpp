@@ -12,6 +12,8 @@ Data::Data(const int mem_depth){
     dataBlock[0] = new int[memory_depth];
     dataBlock[1] = new int[memory_depth];
     DIGI_TEMP tmp_sensor = DIGI_TEMP(); 
+    trg1_count = 0; 
+    trg2_count = 0; 
 }
 
 void Data::read_bytes(){
@@ -58,6 +60,7 @@ void Data::read_bytes(){
 void Data::Read(){
     for (int i=0; i<memory_depth; i++){
         ToggleSlowClock(); 
+        CountTriggers(i); 
         read_bytes(); 
         dataBlock[0][i] = dataCH1;
         dataBlock[1][i] = dataCH2;
@@ -86,8 +89,9 @@ void Data::Write(const char *fname){
     if(config->record_data){
         fprintf(OutputFile,(
             "TIME " + getTime()+"\n"+
-            "TEMP " + std::to_string(tmp_sensor.get_temp()) + "\n"
-            + PrintConfigs()).c_str());}
+            "TEMP " + std::to_string(tmp_sensor.get_temp()) + "\n" +
+            "Trg1Cnt " + std::to_string(trg1_count) + "\n" +
+            "Trg2Cnt "  std::to_string(trg2_count)+ "\n").c_str());}
         
     for (int i=0; i<memory_depth; i++) {
         if (config->record_data){
@@ -100,6 +104,15 @@ void Data::Write(const char *fname){
 
     if(config->record_data){fclose(OutputFile);}
     fclose(plot_output);
+}
+
+void Data::CountTriggers(int nclocks){
+    if (ReadPin(Trg1Cnt)){
+        trg1_count = (2048 - nclocks); 
+    }
+    if (ReadPin(Trg2Cnt)){
+        trg2_count = (2048 - nclocks); 
+    }
 }
 
 std::string Data::PrintConfigs(){

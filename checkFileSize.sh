@@ -1,6 +1,6 @@
 #!/bin/bash
 
-dir=`pwd`
+dir="$HOME/dirpi"
 run_num=$1
 output_folder="Run$run_num"
 fullpath="$dir/$output_folder"

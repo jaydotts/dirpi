@@ -20,6 +20,8 @@ bool isfile (const std::string& name);
 
 bool ispath (const char * path); 
 
+void writeToFile(const char * fname, std::string input);
+
 class Timer{
     private: 
         double start_time; 

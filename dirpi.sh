@@ -1,6 +1,6 @@
 #!/bin/bash
-cd /home/dirpi4/dirpi/
-PIDFILE="/home/dirpi4/dirpi/run.pid"
+cd "$HOME/dirpi"
+PIDFILE="$HOME/dirpi/run.pid"
 
 create_pidfile () {
   echo $$ > "$PIDFILE"
@@ -14,16 +14,16 @@ previous_instance_active () {
   local prevpid
   if [ -f "$PIDFILE" ]; then
     prevpid=$(cat "$PIDFILE")
-    kill -0 $prevpid 
+    pkill -P -0 $prevpid 
   else 
     false
   fi
 }
 
-start_DAQ () {
-  date +"PID: $$ Action started at %H:%M:%S"
+DAQ () {
   case $1 in 
     start)
+        date +"PID: $$ Process started at %H:%M:%S"
         run_num=$( tail -n 1 runlist.txt )
         run_num=$((run_num+1))
         printf "%i\n" $run_num >> runlist.txt
@@ -53,29 +53,12 @@ start_DAQ () {
         echo "Stopping..."
         sleep 3
         rm ".stop"
-        exit
         ;;
-
-    restart)
-        touch ".stop" 
-        echo "Stopping..."
-        sleep 3
-        rm ".stop"
-        
-        echo "Restarting..." 
-        
-        if [ ! -z "$run_num" ]; then 
-            make compiler 
-            if [ ! -d "$output_folder" ]; then 
-                mkdir "$output_folder"
-                wait
-            fi
-            make -j4 RUN=$2
-
-        else
-            make compiler
-            make runner
-	    make plotter
+    
+    stop-hard)
+        if [ -f $PIDFILE ]; then
+          pid=$(cat "$PIDFILE")
+          pkill -P $pid 
         fi
         ;;
     
@@ -94,15 +77,60 @@ start_DAQ () {
     *) 
         echo "Nothing to do"
 esac
-  date +"PID: $$ Action finished at %H:%M:%S"
+  date +"PID: $$ Request completed at %H:%M:%S"
 }
 
-if previous_instance_active
-then 
-  date +'PID: $$ Previous instance is still active at %H:%M:%S, aborting ... '
-else 
-trap remove_pidfile EXIT
-create_pidfile
-start_DAQ $1
-remove_pidfile
-fi
+# main execution
+manager () {
+  case $1 in 
+    start)
+      if previous_instance_active
+      then 
+        date +'PID: $$ Previous instance is still active at %H:%M:%S, aborting ... '
+      else 
+      trap remove_pidfile EXIT
+      create_pidfile
+      DAQ start
+      remove_pidfile
+      source "$HOME/dirpi/check_network.sh"
+      fi
+      ;;
+
+    stop)
+      DAQ stop
+      if [ -f $PIDFILE ]; then 
+        if [ previous_instance_active ]; then 
+          date +"[%H:%M:%S] There was an issue stopping the run. Attempting to force stop..."
+          DAQ stop-hard
+          if [ -f $PIDFILE ]; then 
+            if [ $(ps -p $(cat $PIDFILE) > /dev/null) ]; then
+              date +"[%H:%M:%S] ERROR: PID $$ could not be stopped."
+            else
+              if [ -f $PIDFILE ]; then 
+                rm $PIDFILE 
+              fi
+              date +"PID: $$ Process terminated at %H:%M:%S"
+            fi
+          fi
+        else 
+          date +"PID: $$ Process terminated at %H:%M:%S"
+        fi 
+      else 
+        date +"[%H:%M:%S] No process found."
+      fi 
+      ;;
+
+    restart) 
+      manager stop
+      date +"PID: $$ Restarting... %H:%M:%S"
+      remove_pidfile
+      manager start
+      ;;
+
+    *)
+      date +"[%H:%M:%S] Nothing to do. Exiting..."
+      ;;
+  esac 
+}
+
+manager $1

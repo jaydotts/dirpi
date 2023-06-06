@@ -73,7 +73,12 @@ int main(int argc, char* argv[]){
                     std::to_string(file_count)+
                     ".txt";
 
+                std::string output_path = std::string(
+                    output_folder+"/"+output_fname
+                );
+
                 file_count++;
+                writeToFile(output_path.c_str(), RunData.PrintConfigs()); 
             };
 
             // enable SRAM sampling
