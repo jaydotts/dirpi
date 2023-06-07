@@ -1,11 +1,21 @@
 #!/bin/bash
 
+
 RUN=$(tail -n 1 runlist.txt)
 ID=$(head -n 1 metadata/ID.txt)
-ping -c 1 128.111.19.32
-rc=$?
+TARGET=128.111.19.32
 
-if [ $rc -eq 0 ]; then
+connected () {
+  ping -c 1 $TARGET
+  rc=$?
+  if [ $rc -eq 0 ]; then
+    return 1
+  else
+    return 0
+  fi
+}
+
+if [ connected ]; then
   echo "Connection to tau.physics.ucsb.edu active"
 
   N=200
