@@ -20,6 +20,7 @@ previous_instance_active () {
   fi
 }
 
+# data acquisition manager
 DAQ () {
   case $1 in 
     start)

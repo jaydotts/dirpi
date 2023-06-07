@@ -1,7 +1,7 @@
 #!/bin/bash
 
 RUN=$(tail -n 1 runlist.txt)
-ID=$(head -n 1 ID.txt)
+ID=$(head -n 1 metadata/ID.txt)
 ping -c 1 128.111.19.32
 rc=$?
 
@@ -22,8 +22,13 @@ if [ $rc -eq 0 ]; then
     #  echo "$ID $N  $nextRun \n" >> globalRuns.log 
       echo "copying DiRPi run $N to cmsX as $nextRun"
       rsync -r -z -c --remove-source-files "/media/dirpi4/4E79-9470/Run$N/" "pmfreeman@tau.physics.ucsb.edu:/net/cms26/cms26r0/pmfreeman/XRD/DiRPi_v3/dirpi4/Run$nextRun"
-      rm -r "/media/dirpi4/4E79-9470/Run$N/"
+      if [ !$ans ] ; then
+        rm -r "/media/dirpi4/4E79-9470/Run$N/"
+        echo "deleted"
+      fi
       echo "$ID $N  $nextRun" >> globalRuns.log 
+      #copy config files
+      scp pmfreeman@tau.physics.ucsb.edu:/net/cms26/cms26r0/pmfreeman/XRD/DiRPi_v3/dirpi4/config/*ini config/ 
     fi
   done
 else

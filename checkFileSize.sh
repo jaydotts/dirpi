@@ -19,6 +19,7 @@ moveTo_usb(){
 
     if [ ! -d "$usb/$output_folder" ]; then 
         sudo mkdir "$usb/$output_folder"
+	sudo cp $dir/config/config.ini $usb/$output_folder/
     fi
 
     # do this so files are not overwritten if there is a numbering mismatch

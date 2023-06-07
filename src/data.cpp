@@ -91,7 +91,7 @@ void Data::Write(const char *fname){
             "TIME " + getTime()+"\n"+
             "TEMP " + std::to_string(tmp_sensor.get_temp()) + "\n" +
             "Trg1Cnt " + std::to_string(trg1_count) + "\n" +
-            "Trg2Cnt "  std::to_string(trg2_count)+ "\n").c_str());}
+            "Trg2Cnt " + std::to_string(trg2_count)+ "\n").c_str());}
         
     for (int i=0; i<memory_depth; i++) {
         if (config->record_data){
