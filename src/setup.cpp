@@ -26,6 +26,7 @@ const int SFTTRG=7;
 const int TrgExtEn=0;  
 const int Trg1En=2;    
 const int Trg2En=4;
+const int ISDA=27;
 const int PSCL = 1;
 
 int run_num; 
@@ -58,6 +59,7 @@ void setupPins(){
 
     // set channel prescale
     digitalWrite(PSCL,config->PSCLduty);
+    digitalWrite(ISDA,config->and_enabled);
 }
 
 bool setupComponents(){
@@ -99,6 +101,7 @@ Configuration* load_configs(std::string CONFIG_FILE_PATH){
         .DACValCh1 = reader.GetInteger("trigger","DACValCh1",100),
         .DACValCh2 = reader.GetInteger("trigger","DACValCh2",100),
         .trigger_pos = reader.GetInteger("trigger","Position",1),
+        .and_enabled = reader.GetBoolean("trigger","AND_Enabled",0),
         .memory_depth = reader.GetInteger("data","memory_depth",4096),
         .clckspeed = reader.GetInteger("components","clckspeed",20),
         .PSCLduty = reader.GetInteger("trigger","Prescale",1),

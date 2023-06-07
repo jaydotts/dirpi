@@ -51,8 +51,13 @@ DAQ () {
 
     stop) 
         touch ".stop" 
-        echo "Stopping..."
-        sleep 3
+        echo "Stopping... This may take several seconds."
+        sleep 1
+        local wait_s=0
+        while [ -f $PIDFILE ] && [ $wait_s -lt 10 ]; do
+          sleep 1 
+          ((wait_s++))
+        done
         rm ".stop"
         ;;
     
@@ -105,7 +110,7 @@ manager () {
           DAQ stop-hard
           if [ -f $PIDFILE ]; then 
             if [ $(ps -p $(cat $PIDFILE) > /dev/null) ]; then
-              date +"[%H:%M:%S] ERROR: PID $$ could not be stopped."
+              date +"[%H:%M:%S] ERR_CRITICAL: PID $$ could not be stopped."
             else
               if [ -f $PIDFILE ]; then 
                 rm $PIDFILE 
@@ -117,14 +122,13 @@ manager () {
           date +"PID: $$ Process terminated at %H:%M:%S"
         fi 
       else 
-        date +"[%H:%M:%S] No process found."
+        date +"[%H:%M:%S] Process exited successfully."
       fi 
       ;;
 
     restart) 
       manager stop
       date +"PID: $$ Restarting... %H:%M:%S"
-      remove_pidfile
       manager start
       ;;
 

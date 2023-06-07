@@ -2,18 +2,19 @@
 
 RUN=$(tail -n 1 runlist.txt)
 ID=$(head -n 1 metadata/ID.txt)
-TARGET=128.111.19.32
+#TARGET=128.111.19.32
+TARGET=128.111.19.11
 CONFIG_PATH="pmfreeman@tau.physics.ucsb.edu:/net/cms26/cms26r0/pmfreeman/XRD/DiRPi_v3/dirpi4/config/*ini"
 SCHEDULE_PATH="$HOME/dirpi/config_templates/schedule.json"
 
 # returns true if ping to TARGET succeeds
-connected () {
-  ping -c 1 $TARGET
+check_connection () {
+  ping -c 1 $TARGET > /dev/null
   rc=$?
   if [ $rc -eq 0 ]; then
-    return 1
+    connected=1
   else
-    return 0
+    connected=0
   fi
 }
 
@@ -141,7 +142,10 @@ upsert_configs () {
 }
 
 # main execution 
-if [ connected ]; then
+
+update_configs
+check_connection 
+if [ $connected -eq 1 ]; then
   echo "Connection to tau.physics.ucsb.edu active"
   #copy_data
   #fetch_configs
@@ -150,4 +154,3 @@ if [ connected ]; then
 else
   echo "Connection to tau.physics.ucsb.edu is down"
 fi
-

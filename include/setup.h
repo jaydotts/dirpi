@@ -22,6 +22,7 @@ extern const int SFTTRG;    // OUTPUT. Pulse high to force a software trigger th
 extern const int TrgExtEn;  // OUTPUT. Set high to enable external triggers and software triggers.
 extern const int Trg1En;    // OUTPUT. Set high to enable CH1 triggers.
 extern const int Trg2En;    // OUTPUT. Set high to enable CH2 triggers.
+extern const int ISDA;      // OUTPUT. Set high to enable AND on V3
 extern const int PSCL;          // OUTPUT (PWM). Used to prescale the number of CH1 OR CH2 triggers accepted.
 
 /* 
@@ -49,6 +50,7 @@ struct Configuration{
     long DACValCh1; 
     long DACValCh2;
     long trigger_pos; 
+    bool and_enabled;
     const int memory_depth; 
     long clckspeed; 
     long PSCLduty;
