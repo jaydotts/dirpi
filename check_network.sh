@@ -191,7 +191,7 @@ upsert_configs () {
 check_connection 
 if [ $connected -eq 1 ]; then
   echo "Connection to tau.physics.ucsb.edu active"
-  #copy_data
+  copy_data
   fetch_configs
   update_configs
   upsert_configs
