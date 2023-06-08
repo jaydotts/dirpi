@@ -137,5 +137,5 @@ manager () {
       ;;
   esac 
 }
-
+echo "Triggering DAQ"
 manager $1
