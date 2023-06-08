@@ -43,11 +43,11 @@ clean_sd () {
 parachute () {
     if [ -f "config_templates/emergency_pull.ini" ]; then
         cd $DIRPI_DIR
-        cp /etc/ssh/ssh_config_git /etc/ssh/ssh_config
+        sudo cp /etc/ssh/ssh_config_git /etc/ssh/ssh_config
         git fetch --all
         git reset --hard origin/auto_run
         rm "config_templates/emergency_pull.ini"
-        cp /etc/ssh/ssh_config_rsync /etc/ssh/ssh_config
+        sudo cp /etc/ssh/ssh_config_rsync /etc/ssh/ssh_config
     fi 
 }
 
