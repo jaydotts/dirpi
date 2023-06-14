@@ -8,7 +8,7 @@ CONFIG_PATH="$CONFIG_FOLDER/*ini"
 SCHEDULE_PATH="$HOME/dirpi/config_templates/schedule.json"
 DIRPI_DIR="$HOME/dirpi"
 USB_DIR=$(readlink -f /dev/disk/by-id/usb-* | while read dev;do mount | grep "$dev\b" | awk '{print $3}'; done)
-CMSX_DIR="pmfreeman@tau.physics.ucsb.edu:/net/cms26/cms26r0/pmfreeman/XRD/DiRPi_v3/dirpi4"
+CMSX_DIR="pmfreeman@tau.physics.ucsb.edu:/net/cms26/cms26r0/pmfreeman/XRD/DiRPi_v3/dirpi$ID"
 
 clean_sd () {
     local minimum_space=10000000000
@@ -66,25 +66,44 @@ check_connection () {
 
 # copies data from USB to cms server
 copy_data () {
-  N=200
+  N=0
   echo "Copying data to cms" 
 
   while [ $N -lt $RUN ]; do
     #echo $N
     N=$((N+1))
-    if [ -e "$USB_DIR" ]; then
-      url="http://cms2.physics.ucsb.edu/cgi-bin/NextDiRPiRun?RUN=$N&ID=$ID"
-      echo $url
-      next=$(curl -s $url)
-      nextRun=$next #${next:64:4}
-    #  echo "$ID $N  $nextRun \n" >> globalRuns.log 
-      echo "Copying DiRPi run $N to cmsX as $nextRun"
-      rsync -r -z -c --remove-source-files "$USB_DIR/Run$N/" "$CMSX_DIR/Run$nextRun"
-      if [ !$ans ] ; then
-        echo "Runs moved to cmsX successfully. Deleting..."
-        rm -r "$USB_DIR/Run$N/"
+
+    # only proceed if run directory exists, not just main usb directory
+    # if [ -e "$USB_DIR" ]; then
+    if [ -e "$USB_DIR/Run$N/" ]; then
+      
+      # if the run directory isn't empty, try to transfer run files
+      if [ "$(ls -A $USB_DIR/Run$N/)" ]; then
+        echo "attempting to transfer run $N from $USB_DIR/Run$N/"
+        
+        # request a global run number for this run
+        url="http://cms2.physics.ucsb.edu/cgi-bin/NextDiRPiRun?RUN=$N&ID=$ID"
+        echo $url
+        next=$(curl -s $url)
+        nextRun=$next #${next:64:4}
+        #echo "$ID $N  $nextRun \n" >> globalRuns.log 
+        
+        # transfer the run files
+        echo "Copying DiRPi run $N to cmsX as $nextRun"
+        rsync -r -z -c --remove-source-files "$USB_DIR/Run$N/" "$CMSX_DIR/Run$nextRun"
+        
+        # add run to global run log
+        echo "$ID $N  $nextRun" >> globalRuns.log 
       fi
-      echo "$ID $N  $nextRun" >> globalRuns.log 
+
+      # if the directory is empty now, remove it
+      if [ "$(ls -A $USB_DIR/Run$N/)" ]; then
+        echo "directory $USB_DIR/Run$N/ not empty - transfer may have failed"
+      else
+        echo "directory $USB_DIR/Run$N/ is empty; deleting it"
+        rmdir "$USB_DIR/Run$N/"
+      fi
+
     fi
   done
 }
