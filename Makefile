@@ -32,3 +32,6 @@ cleanup:
 
 test: 
 	$(CC) $(CFLAGS ) src/*.cpp unit_test/src/*.cpp -o test -lwiringPi
+
+monitor: 
+	$(DIR)/main

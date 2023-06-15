@@ -117,11 +117,16 @@ bool setupFiles(int run_num){
     Sets up file naming conventions and does directory checks 
     */
 
-    fname_prefix = "Run"+std::to_string(run_num);
-    output_folder = "Run"+std::to_string(run_num);
+    if(! run_num){
+        config->record_data=false;
+    }
+    else{
+        fname_prefix = "Run"+std::to_string(run_num);
+        output_folder = "Run"+std::to_string(run_num);
 
-    if(ispath(output_folder.c_str())){
-        config->record_data=true; 
+        if(ispath(output_folder.c_str())){
+            config->record_data=true; 
+    }
     }
     return true; 
 }

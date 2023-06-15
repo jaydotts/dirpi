@@ -20,6 +20,17 @@ previous_instance_active () {
   fi
 }
 
+# monitoring mode - only write to plot buffer
+monitor() {
+  if [ ! -f "plot_buffer.txt" ]; then 
+    touch "plot_buffer.txt"
+  fi 
+  date +"PID: $$ Process started at %H:%M:%S"
+  echo "Entering monitor mode... No data saved."
+  sleep 1 
+  make monitor 
+}
+
 # data acquisition manager
 DAQ () {
   case $1 in 
@@ -86,7 +97,7 @@ esac
   date +"PID: $$ Request completed at %H:%M:%S"
 }
 
-# main execution
+# run selector - main execution script
 manager () {
   case $1 in 
     start)
@@ -132,10 +143,23 @@ manager () {
       manager start
       ;;
 
+    monitor)
+      if previous_instance_active
+      then 
+        date +'PID: $$ Previous instance is still active at %H:%M:%S, aborting ... '
+      else 
+      trap remove_pidfile EXIT
+      create_pidfile
+      monitor 
+      remove_pidfile
+      fi 
+      ;;
+
     *)
       date +"[%H:%M:%S] Nothing to do. Exiting..."
       ;;
   esac 
 }
-echo "Triggering DAQ"
+
+echo "Command received."
 manager $1

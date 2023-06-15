@@ -90,6 +90,7 @@ copy_data () {
         
         # transfer the run files
         echo "Copying DiRPi run $N to cmsX as $nextRun"
+        sudo cp /etc/ssh/ssh_config_rsync /etc/ssh/ssh_config
         rsync -r -z -c --remove-source-files "$USB_DIR/Run$N/" "$CMSX_DIR/Run$nextRun"
         
         # add run to global run log

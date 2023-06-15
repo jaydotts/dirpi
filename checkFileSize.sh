@@ -114,7 +114,8 @@ while [ ! -f ".stop" ]; do
     compress $fullpath
 done
 
-for FILE in $(cd $fullpath && ls -trp *.txt | grep -v '/$' | head)
+# the flag "--lines -0" on head tells it to include all lines, not just the first 10
+for FILE in $(cd $fullpath && ls -trp *.txt | grep -v '/$' | head --lines -0)
     do  
         moveTo_usb $FILE 
     done 
