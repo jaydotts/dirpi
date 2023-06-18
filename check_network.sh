@@ -84,17 +84,41 @@ copy_data () {
         # request a global run number for this run
         url="http://cms2.physics.ucsb.edu/cgi-bin/NextDiRPiRun?RUN=$N&ID=$ID"
         echo $url
-        next=$(curl -s $url)
+        # call curl with -f flag to get errors for missing/404/etc. 
+        next=$(curl -sf $url)
+        status=$?
+
+        # skip if status > 0 (indicates error)
+        if [ $status -gt 0 ] ; then
+          echo "skipping $N: curl returned nonzero status: $status"
+          continue
+        fi
+        
+        # extract nextRun from curl result
         nextRun=$next #${next:64:4}
         #echo "$ID $N  $nextRun \n" >> globalRuns.log 
         
-        # transfer the run files
+        # check that nextRun is an integer
+        re_int='^[0-9]+$'
+        if ! [[ $nextRun =~ $re_int ]] ; then
+          echo "skipping $N: got non-integer value for nextRun: $nextRun"
+          continue
+        fi
+        
+        # check that nextRun is greater than zero
+        if ! [ $nextRun -gt 0 ] ; then
+          echo "skipping $N: got non-positive nextRun: $nextRun"
+          continue
+        fi
+        
+        # success - transfer the run files
         echo "Copying DiRPi run $N to cmsX as $nextRun"
         sudo cp /etc/ssh/ssh_config_rsync /etc/ssh/ssh_config
         rsync -r -z -c --remove-source-files "$USB_DIR/Run$N/" "$CMSX_DIR/Run$nextRun"
-        
         # add run to global run log
         echo "$ID $N  $nextRun" >> globalRuns.log 
+
+        
       fi
 
       # if the directory is empty now, remove it
