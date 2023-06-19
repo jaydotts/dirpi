@@ -92,16 +92,18 @@ int main(int argc, char* argv[]){
 
             // wait for OE* to go high -> indicates that 
             // trigger runout has gone high 
-            while(ReadPin(OEbar)==1); 
-            digitalWrite(DAQHalt,1);
-            digitalWrite(DAQHalt,1);
-            digitalWrite(DAQHalt,1);
-            RunData.Read(); 
-            RunData.Write((
-                output_folder+"/"+output_fname).c_str()
-                ); 
-            RunData.eventNum++; 
-            std::cout << '\r'<<"Events: "<< RunData.eventNum << std::flush;
+            if (ReadPin(OEbar) == 1){
+                while(ReadPin(OEbar)==1); 
+                digitalWrite(DAQHalt,1);
+                digitalWrite(DAQHalt,1);
+                digitalWrite(DAQHalt,1);
+                RunData.Read(); 
+                RunData.Write((
+                    output_folder+"/"+output_fname).c_str()
+                    ); 
+                RunData.eventNum++; 
+                std::cout << '\r'<<"Events: "<< RunData.eventNum << std::flush;
+            }
         }
 
         std::cout<<"\nTotal Events: "<<RunData.eventNum<<endl;
