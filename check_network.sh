@@ -115,9 +115,9 @@ copy_data () {
         echo "Copying DiRPi run $N to cmsX as $nextRun"
         sudo cp /etc/ssh/ssh_config_rsync /etc/ssh/ssh_config
         rsync -r -z -c --remove-source-files "$USB_DIR/Run$N/" "$CMSX_DIR/Run$nextRun"
+
         # add run to global run log
         echo "$ID $N  $nextRun" >> globalRuns.log 
-
         
       fi
 
@@ -233,11 +233,24 @@ upsert_configs () {
   scp $SCHEDULE_PATH $CONFIG_FOLDER/json_response.json
 }
 
-# main execution 
+# usage: timeout <n_seconds> <function_name>
+timeout() {
+	local cmd_pid sleep_pid retval
+	(shift; "$@") &   # shift out sleep value and run rest as command in background job
+	cmd_pid=$!
+	(sleep "$1"; kill "$cmd_pid" 2>/dev/null) &
+	sleep_pid=$!
+	wait "$cmd_pid"
+	retval=$?
+	kill "$sleep_pid" 2>/dev/null
+	return "$retval"
+}
+
+############################################## main execution block
 check_connection 
 if [ $connected -eq 1 ]; then
   echo "Connection to tau.physics.ucsb.edu active"
-  copy_data
+  timeout 10 copy_data
   fetch_configs
   update_configs
   upsert_configs
