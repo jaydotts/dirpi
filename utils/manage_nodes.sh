@@ -24,8 +24,8 @@ copy_node_data() {
     # prompts node to send location of its usb directory
     # using the onboard dirpi/get_usb.sh command. 
     # it is then stored in a variable.
-    node1_usb=$(ssh "$node1_user@$node1_ip" "dirpi/get_usb.sh")
-    node2_usb=$(ssh "$node2_user@$node2_ip" "dirpi/get_usb.sh")
+    node1_usb=$(ssh "$node1_user@$node1_ip" "dirpi/utils/echo_usb.sh")
+    node2_usb=$(ssh "$node2_user@$node2_ip" "dirpi/utils/echo_usb.sh")
 
     if [ -n "$node1_usb" ];then 
         echo "node1 usb located at $node1_usb"
