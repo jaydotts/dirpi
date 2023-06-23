@@ -16,7 +16,7 @@ runner: main
 
 # make sure to change this to the code path on the device! 
 manager: checkFileSize.sh
-	$(DIR)/checkFileSize.sh $(RUN)
+	$(DIR)/utils/run_compression.sh $(RUN)
 
 plotter: 
 	python3 gui.py

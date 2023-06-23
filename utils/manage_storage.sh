@@ -1,5 +1,9 @@
 #!/bin/bash
-
+#
+# Contains storage management protocols to be executed with and without internet. 
+#
+#
+#
 RUN=$(tail -n 1 runlist.txt)
 ID=$(head -n 1 metadata/ID.txt)
 TARGET=128.111.19.32

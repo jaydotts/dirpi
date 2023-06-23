@@ -108,8 +108,8 @@ manager () {
       trap remove_pidfile EXIT
       create_pidfile
       DAQ start
-      remove_pidfile
       source "$HOME/dirpi/check_network.sh"
+      remove_pidfile
       fi
       ;;
 
@@ -148,7 +148,7 @@ manager () {
       then 
         date +'PID: $$ Previous instance is still active at %H:%M:%S, aborting ... '
       else 
-      trap remove_pidfile EXIT
+      #trap remove_pidfile EXIT
       create_pidfile
       monitor 
       remove_pidfile

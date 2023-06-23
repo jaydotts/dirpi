@@ -1,5 +1,10 @@
 #!/bin/bash
-
+#
+#
+#
+#
+#
+#
 dir="$HOME/dirpi"
 run_num=$1
 output_folder="Run$run_num"
@@ -30,7 +35,7 @@ check_usb () {
         echo "[ERROR] Space is critical (<1GB). Pausing runs.."
         echo "Bytes available: $space"
         stop_runs=1
-    elif [ $space -lt $$danger_zone ]; then
+    elif [ $space -lt $danger_zone ]; then
         echo "[WARNING] Space is getting low. Removing old waveforms..."
         clean_usb
     else
