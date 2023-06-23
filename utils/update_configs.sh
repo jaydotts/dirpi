@@ -1,6 +1,6 @@
 
 SCHEDULE_PATH="$HOME/dirpi/config_templates/schedule.json"
-
+#
 # updates the config run schedule to move on to the next config.
 update_schedule () {
   cp $SCHEDULE_PATH metadata/prev_schedule.json
