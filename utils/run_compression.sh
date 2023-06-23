@@ -114,12 +114,14 @@ compress()
                 moveTo_usb $FILE 
             done 
     fi
+    return
 }
 
 compress_files(){
     while [ ! -f ".stop" ]; do
         compress $fullpath
     done
+    return
 }
 
 cleanup(){
@@ -132,14 +134,15 @@ cleanup(){
     cp run.log "$USB_DIR/$output_folder/"
     > run.log
     rm -rf $fullpath
+    return
 }
 
 run_compression(){
     if [ ! -d $fullpath ]; then 
-        exit
+        return
     fi 
     compress_files
-    run_with_timeout 600 cleanup
+    run_with_timeout 5 cleanup
 }
 
 # main execution

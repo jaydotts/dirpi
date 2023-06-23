@@ -10,14 +10,13 @@ COMPSN_OPTS = -O3 -ffast-math -g0
 
 #all: runner manager
 
-compiler: 
+compiler:
 	$(CC) $(CFLAGS ) src/*.cpp -o main -lwiringPi
 
 # make sure to change this to the code path on the device!
 runner: main
 	$(DIR)/main config/config.ini $(RUN) $(FILES_PER_RUN)
 
-# make sure to change this to the code path on the device! 
 manager: 
 	./utils/run_compression.sh $(RUN)
 
@@ -36,3 +35,8 @@ DAQ:
 compression: compression/DiRPi
 	g++ -Wno-deprecated $(OPT)  -o compression/DiRPi.o -c compression/DiRPi.cc
 	g++ -Wno-deprecated $(OPT) compression/DiRPi.o -o compression/DiRPi
+
+clean: 
+	rm main || true
+	rm compression/DiRPi || true
+	rm compression/DiRPi.o || true

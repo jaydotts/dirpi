@@ -18,15 +18,25 @@ run_with_timeout() {
   local command_pid=$!
 
   # Sleep for the specified timeout period
-  sleep "$timeout"
+  #sleep "$timeout"
+  local time_elapsed=0
 
+  while [ $time_elapsed -lt $timeout ]; do
+    if ps -p "$command_pid" > /dev/null; then
+      sleep 1
+      ((time_elapsed++))
+    else 
+      break 
+    fi 
+    done
+  
   # Check if the command is still running
   if ps -p "$command_pid" > /dev/null; then
     # Kill the command process
-    kill "$command_pid"
+    pkill -P "$command_pid"
     echo "Command killed after $timeout seconds"
   else
-    echo "Command completed before timeout"
+    echo "Command completed in $time_elapsed seconds"
   fi
 }
 

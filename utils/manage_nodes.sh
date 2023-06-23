@@ -11,12 +11,38 @@ node1_ip="128.111.19.148"
 node2_user="dirpi09"
 node2_ip="128.111.19.45"
 USB_DIR=$(readlink -f /dev/disk/by-id/usb-* | while read dev;do mount | grep "$dev\b" | awk '{print $3}'; done)
-
 node1_dir="$USB_DIR/dirpi02"
 node2_dir="$USB_DIR/dirpi09"
 
+# sets default count of active nodes 
+active_nodes=0
+node1_active=0
+node2_active=0
+
+# Pings nodes and returns 1 if nodes are active, 0 otherwise 
 ping_nodes() {
     echo "Pinging nodes"
+    
+    if ping -c 1 "$node1_ip" > /dev/null 2>&1; then
+        echo "$node1_user active at $node1_ip"
+        node1_active=1
+        ((active_nodes++))
+    else
+        echo "[WARNING] node1 ($node1_user) unreachable at $node1_ip"
+    fi
+
+    if ping -c 1 "$node2_ip" > /dev/null 2>&1; then
+        echo "$node2_user active at $node2_ip"
+        node2_active=1
+        ((active_nodes++))
+    else
+        echo "[WARNING] node1 ($node2_user) unreachable at $node2_ip"
+    fi
+}
+
+setup_nodes(){ 
+    echo "Setting up nodes..."
+    ping_nodes 
 }
 
 # copies node data to local usb directories. 
@@ -64,4 +90,4 @@ copy_node_data() {
     fi
 }
 
-copy_node_data
+ping_nodes

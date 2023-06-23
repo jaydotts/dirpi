@@ -1,6 +1,7 @@
 #!/bin/bash
 cd "$HOME/dirpi"
 PIDFILE="$HOME/dirpi/run.pid"
+source "$HOME/dirpi/utils/_bash_utils.sh"
 
 #################################################### Process management 
 create_pidfile () {
@@ -55,18 +56,26 @@ DAQ () {
         output_folder="Run"$run_num
 
         if [ ! -z "$run_num" ]; then 
-            # compile src code 
-            make compiler 
+
+            # compile if not already compiled
+            if [ ! -f "main" ]; then 
+              run_with_timeout 60 make compiler 
+            fi 
+
+            if [ ! -f "compression/DiRPi" ]; then 
+              run_with_timeout 60 make compression 
+            fi 
+
             if [ ! -d "$output_folder" ]; then 
                 mkdir "$output_folder"
                 wait
             fi
-            echo "starting DAQ"
+            # get absolute lifetime (in seconds) of run
+            echo "starting DAQ"]
+            local abs_lifetime=$(parse_config "config/config.ini" "run_lifetime_s" 5)
             echo "Run=$run_num"
             rm ".stop"
-            # run make command to execute DAQ and manager simultaneously
-            #make -j2 RUN=$run_num
-            make DAQ RUN=$run_num
+            run_with_timeout $abs_lifetime make DAQ RUN=$run_num
 
         else
             make compiler
@@ -77,14 +86,14 @@ DAQ () {
 
     stop) 
         touch ".stop" 
-        echo "Stopping... This may take several seconds."
-        sleep 1
-        local wait_s=0
-        while [ -f $PIDFILE ] && [ $wait_s -lt 10 ]; do
-          sleep 1 
-          ((wait_s++))
-        done
-        rm ".stop"
+        echo "Stopping. This may take several seconds."
+        local max_count=10
+        local count=0
+        while [[ -f "$PIDFILE" && $count -lt $max_count ]];do 
+          sleep 1
+          printf '.' > /dev/tty
+          ((count++))
+        done 
         ;;
     
     stop-hard)
@@ -121,9 +130,10 @@ manager () {
         date +'PID: $$ Previous instance is still active at %H:%M:%S, aborting ... '
       else 
       trap exit_protocol EXIT
+      echo "Updating config file"
+      source "$HOME/dirpi/utils/update_configs.sh"
       create_pidfile
       DAQ start
-      #source "$HOME/dirpi/check_network.sh"
       remove_pidfile
       fi
       ;;
@@ -172,3 +182,4 @@ manager () {
 
 echo "Command received."
 manager $1
+echo "Run Cycle complete."
