@@ -19,7 +19,10 @@ ping_nodes() {
     echo "Pinging nodes"
 }
 
+# copies node data to local usb directories. 
+# the files are later 
 copy_node_data() {
+    if [! -d $USB_DIR ]; then echo "USB NOT INSERTED"; return; fi
     echo "Copying data" 
     # prompts node to send location of its usb directory
     # using the onboard dirpi/get_usb.sh command. 
@@ -35,9 +38,10 @@ copy_node_data() {
         scp -r "$node1_user@$node1_ip:$node1_usb/Run*" "$node1_dir/"
         if [ $? -eq 0 ]; then
             # remove the src files
+            echo "SCP for node 1 complete, deleting src files."
             ssh "$node1_user@$node1_ip" "rm -rf $node1_usb/Run*"
         else
-        echo "[WARNING] SCP for node 1 failed"
+        echo "[WARNING] SCP for node 1 incomplete. Keeping src files."
         fi
     else
         echo "[WARNING] node1 usb not inserted. Data will not be transferred."
@@ -53,7 +57,7 @@ copy_node_data() {
             # remove the src files
             ssh "$node2_user@$node2_ip" "rm -rf $node2_usb/Run*"
         else
-        echo "[WARNING] SCP for node 2 failed"
+        echo "[WARNING] SCP for node 2 incomplete. Keeping src files."
         fi
     else 
         echo "[WARNING] node2 usb not inserted. no data will be transferred."

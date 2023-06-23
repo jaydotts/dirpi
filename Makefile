@@ -4,6 +4,8 @@
 CC = g++
 CFLAGS = -O 
 DIR = $(shell pwd)
+FILES_PER_RUN = $(shell source utils/_bash_utils.sh && parse_config "config/config.ini" "files_per_run" "100")
+SHELL := /bin/bash
 
 all: runner manager
 
@@ -12,7 +14,7 @@ compiler:
 
 # make sure to change this to the code path on the device!
 runner: main
-	$(DIR)/main config/config.ini $(RUN) 100
+	$(DIR)/main config/config.ini $(RUN) $(FILES_PER_RUN)
 
 # make sure to change this to the code path on the device! 
 manager: 
@@ -29,9 +31,6 @@ cleanup:
 	@touch ".stop"
 	@sleep 2
 	@rm ".stop"
-
-test: 
-	$(CC) $(CFLAGS ) src/*.cpp unit_test/src/*.cpp -o test -lwiringPi
 
 monitor: 
 	$(DIR)/main

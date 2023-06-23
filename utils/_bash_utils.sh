@@ -2,7 +2,7 @@
 #
 #
 #
-# Collection of protection protocols for dirpi commands. Includes boilerplate methods for: 
+# Collection of helper methods for dirpi commands. Includes boilerplate methods for: 
 # - Running function with a timeout 
 #
 
@@ -28,4 +28,25 @@ run_with_timeout() {
   else
     echo "Command completed before timeout"
   fi
+}
+
+parse_config() {
+  local config_file=$1
+  local keyword=$2
+  local default=$3
+
+  # Read the config file line by line
+  while IFS='=' read -r key value; do
+    # Remove leading/trailing whitespace from the key and value
+    key=${key// /}
+    value=${value// /}
+    
+    # Check if the current line contains the desired keyword
+    if [[ "$key" == "$keyword" ]]; then
+      echo "$value"
+      return
+    fi
+  done < "$config_file"
+
+  echo "$default"
 }
