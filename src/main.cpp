@@ -47,8 +47,10 @@ int main(int argc, char* argv[]){
         std::string CONFIG_FILE_PATH = "config/config.ini";
         
         if(argc > 1){
+            cout<<run_num<<endl;
             run_num = stoi(argv[2]);}
         if(argc > 2){
+            cout<<max_files<<endl;
             max_files = stoi(argv[3]);}
 
         cout<<"START"<<endl;

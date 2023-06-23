@@ -161,9 +161,9 @@ class MainWindow(QtWidgets.QMainWindow):
         layout.addWidget(self.c1)
         self.c1.toggle()
 
-        self.push_config = QtWidgets.QPushButton("Configure", self)
-        layout.addWidget(self.push_config)
-        self.push_config.clicked.connect(self.open_configs)
+        self.push_hist_reset = QtWidgets.QPushButton("Reset Histogram", self)
+        layout.addWidget(self.push_hist_reset)
+        self.push_hist_reset.clicked.connect(self.reset_histogram)
         
         #self.trigger = QtWidgets.QPushButton(self)
         #self.trigger.setText("Stop")
@@ -176,10 +176,9 @@ class MainWindow(QtWidgets.QMainWindow):
         cboxes.setWidget(w)
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, cboxes)
     
-    def open_configs(self):                                                                                     
-        dlg = ConfigDialog()
-        dlg.setWindowTitle("HELLO!")
-        dlg.exec()
+    def reset_histogram(self):                                                                                     
+        self.hist_data_1 = np.zeros(256, dtype=int)
+        self.hist_data_2 = np.zeros(256, dtype=int)
     
     def toggle_triggers(self): 
         btn_text = self.trigger.text()

@@ -6,11 +6,13 @@
 #
 #
 dir="$HOME/dirpi"
+source "$dir/utils/_bash_utils.sh"
 run_num=$1
 output_folder="Run$run_num"
 fullpath="$dir/$output_folder"
 USB_DIR=$(readlink -f /dev/disk/by-id/usb-* | while read dev;do mount | grep "$dev\b" | awk '{print $3}'; done)
 stop_runs=0
+
 
 check_usb () { 
 
@@ -84,10 +86,12 @@ moveTo_usb(){
     echo "fnum=$fnum"
     cd $fullpath
 
+    # gzip the first file of every run so it's easy to analyze by eye 
     if [ $fnum -eq 0 ]; then 
         gzip -c Run${run_num}_${fnum}.txt > $usb/$output_folder/Run${run_num}_${fnum}.txt.gz
     fi 
 
+    # use custom compression on remaining files
     nice ${dir}/compression/DiRPi lossycompress $run_num $fnum
     nice ${dir}/compression/DiRPi savepulses $run_num $fnum
     sudo mv Run${run_num}_${fnum}.drpw $usb/$output_folder/Run${run_num}_${fnum}.drpw
@@ -101,6 +105,7 @@ compress()
     if [ $(ls $1/ | grep -c txt) -lt 3 ]; then 
         # while waiting for new files sleep to save cpu time
         sleep 3
+        return
     fi
     if [ $(ls $1/ | grep -c txt) -gt 2 ]; then 
 
@@ -111,20 +116,31 @@ compress()
     fi
 }
 
-if [ ! -d $fullpath ]; then 
-    exit
-fi 
+compress_files(){
+    while [ ! -f ".stop" ]; do
+        compress $fullpath
+    done
+}
 
-while [ ! -f ".stop" ]; do
-    compress $fullpath
-done
+cleanup(){
+    # the flag "--lines -0" on head tells it to include all lines, not just the first 10
+    for FILE in $(cd $fullpath && ls -trp *.txt | grep -v '/$' | head --lines -0)
+        do  
+            moveTo_usb $FILE 
+        done 
 
-# the flag "--lines -0" on head tells it to include all lines, not just the first 10
-for FILE in $(cd $fullpath && ls -trp *.txt | grep -v '/$' | head --lines -0)
-    do  
-        moveTo_usb $FILE 
-    done 
+    cp run.log "$USB_DIR/$output_folder/"
+    > run.log
+    rm -rf $fullpath
+}
 
-cp run.log "$USB_DIR/$output_folder/"
-> run.log
-rm -rf $fullpath
+run_compression(){
+    if [ ! -d $fullpath ]; then 
+        exit
+    fi 
+    compress_files
+    run_with_timeout 600 cleanup
+}
+
+# main execution
+run_compression

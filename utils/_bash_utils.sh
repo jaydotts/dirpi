@@ -48,5 +48,5 @@ parse_config() {
     fi
   done < "$config_file"
 
-  echo "$default"
+  echo $default
 }

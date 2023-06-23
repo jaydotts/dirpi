@@ -2,6 +2,7 @@
 cd "$HOME/dirpi"
 PIDFILE="$HOME/dirpi/run.pid"
 
+#################################################### Process management 
 create_pidfile () {
   echo $$ > "$PIDFILE"
 }
@@ -10,17 +11,19 @@ remove_pidfile () {
   [ -f "$PIDFILE" ] && rm "$PIDFILE"
 }
 
+# check if process in pidfile is active
 previous_instance_active () {
   local prevpid
   if [ -f "$PIDFILE" ]; then
     prevpid=$(cat "$PIDFILE")
+    # use pkill, send null to process (do nothing)
     pkill -P -0 $prevpid 
   else 
     false
   fi
 }
 
-# monitoring mode - only write to plot buffer
+#################################################### DAQ Custom Run Configurations
 monitor() {
   if [ ! -f "plot_buffer.txt" ]; then 
     touch "plot_buffer.txt"
@@ -31,10 +34,19 @@ monitor() {
   make monitor 
 }
 
-# data acquisition manager
+#################################################### DAQ Helper Functions
+
+# protocol that is trapped on exit 
+exit_protocol(){
+  manager stop
+  
+}
+
+#################################################### Data Acqusition Method
 DAQ () {
   case $1 in 
     start)
+        # get next run # from runlist.txt
         date +"PID: $$ Process started at %H:%M:%S"
         run_num=$( tail -n 1 runlist.txt )
         run_num=$((run_num+1))
@@ -43,6 +55,7 @@ DAQ () {
         output_folder="Run"$run_num
 
         if [ ! -z "$run_num" ]; then 
+            # compile src code 
             make compiler 
             if [ ! -d "$output_folder" ]; then 
                 mkdir "$output_folder"
@@ -51,7 +64,9 @@ DAQ () {
             echo "starting DAQ"
             echo "Run=$run_num"
             rm ".stop"
-            make -j2 RUN=$run_num
+            # run make command to execute DAQ and manager simultaneously
+            #make -j2 RUN=$run_num
+            make DAQ RUN=$run_num
 
         else
             make compiler
@@ -97,7 +112,7 @@ esac
   date +"PID: $$ Request completed at %H:%M:%S"
 }
 
-# run selector - main execution script
+#################################################### Main Function
 manager () {
   case $1 in 
     start)
@@ -105,10 +120,10 @@ manager () {
       then 
         date +'PID: $$ Previous instance is still active at %H:%M:%S, aborting ... '
       else 
-      trap remove_pidfile EXIT
+      trap exit_protocol EXIT
       create_pidfile
       DAQ start
-      source "$HOME/dirpi/check_network.sh"
+      #source "$HOME/dirpi/check_network.sh"
       remove_pidfile
       fi
       ;;
@@ -137,18 +152,12 @@ manager () {
       fi 
       ;;
 
-    restart) 
-      manager stop
-      date +"PID: $$ Restarting... %H:%M:%S"
-      manager start
-      ;;
-
     monitor)
       if previous_instance_active
       then 
         date +'PID: $$ Previous instance is still active at %H:%M:%S, aborting ... '
       else 
-      #trap remove_pidfile EXIT
+      trap exit_protocol EXIT
       create_pidfile
       monitor 
       remove_pidfile
