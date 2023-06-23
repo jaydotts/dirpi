@@ -88,6 +88,7 @@ moveTo_usb(){
 
     # gzip the first file of every run so it's easy to analyze by eye 
     if [ $fnum -eq 0 ]; then 
+        echo "gzipping..."
         gzip -c Run${run_num}_${fnum}.txt > $usb/$output_folder/Run${run_num}_${fnum}.txt.gz
     fi 
 
@@ -108,19 +109,11 @@ compress()
         return
     fi
     if [ $(ls $1/ | grep -c txt) -gt 2 ]; then 
-
         for FILE in $(cd $1 && ls -trp *.txt | grep -v '/$' | head -n +1)
             do  
                 moveTo_usb $FILE 
             done 
     fi
-    return
-}
-
-compress_files(){
-    while [ ! -f ".stop" ]; do
-        compress $fullpath
-    done
     return
 }
 
@@ -141,9 +134,15 @@ run_compression(){
     if [ ! -d $fullpath ]; then 
         return
     fi 
-    compress_files
-    run_with_timeout 5 cleanup
+
+    # run compression method until stop condition met
+    while [ ! -f ".stop" ]; do
+        run_with_timeout 10 compress $fullpath
+    done
+
+    run_with_timeout 5 cleanup 
 }
 
 # main execution
 run_compression
+exit 1

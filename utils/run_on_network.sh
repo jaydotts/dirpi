@@ -70,71 +70,67 @@ check_connection () {
   fi
 }
 
+request_global_run(){
+  local N=$1
+  local ID=$2
+
+  local url="http://cms2.physics.ucsb.edu/cgi-bin/NextDiRPiRun?RUN=$N&ID=$ID"
+  # call curl with -f flag to get errors for missing/404/etc. 
+  local next=$(curl -sf $url)
+  local status=$?
+  # skip if status > 0 (indicates error)
+  if [ $status -gt 0 ] ; then
+    echo ""
+    return 
+  fi
+  echo $next
+}
+
+# calls send_node_data from node manager
+send_node_data(){
+  node1_dir=$(. "$HOME/dirpi/utils/node_manager.sh"; echo $node1_dir)
+  node2_dir=$(. "$HOME/dirpi/utils/node_manager.sh"; echo $node2_dir)
+  if [ -d "$node1_dir" ]; then
+    copy_data $node1_dir
+  fi 
+  if [ -d "$node2_dir" ]; then 
+    copy_data $node2_dir
+  fi 
+}
+
 # copies data from USB to cms server
-copy_data () {
-  N=0
-  echo "Copying data to cms" 
+copy_data(){
+  local SOURCE_DIR=$1
+  for folder in "$SOURCE_DIR"/Run*; do
 
-  while [ $N -lt $RUN ]; do
-    #echo $N
-    N=$((N+1))
+    folder_name="$(basename "$folder")"
+    N="${folder_name#Run}"
 
-    # only proceed if run directory exists, not just main usb directory
-    # if [ -e "$USB_DIR" ]; then
-    if [ -e "$USB_DIR/Run$N/" ]; then
-      
-      # if the run directory isn't empty, try to transfer run files
-      if [ "$(ls -A $USB_DIR/Run$N/)" ]; then
-        echo "attempting to transfer run $N from $USB_DIR/Run$N/"
-        
-        # request a global run number for this run
-        url="http://cms2.physics.ucsb.edu/cgi-bin/NextDiRPiRun?RUN=$N&ID=$ID"
-        echo $url
-        # call curl with -f flag to get errors for missing/404/etc. 
-        next=$(curl -sf $url)
-        status=$?
-
-        # skip if status > 0 (indicates error)
-        if [ $status -gt 0 ] ; then
-          echo "skipping $N: curl returned nonzero status: $status"
-          continue
-        fi
-        
-        # extract nextRun from curl result
-        nextRun=$next #${next:64:4}
-        #echo "$ID $N  $nextRun \n" >> globalRuns.log 
-        
-        # check that nextRun is an integer
+    if [ "$(ls -A $SOURCE_DIR/$folder_name/)" ]; then 
+      echo "Attempting to transfer run $N from $SOURCE_DIR/$folder_name"
+      next_run=$(request_global_run $N $ID)
+      echo "next run: $next_run"
+      if [ "$next_run" ]; then 
+        # check that next run is an integer
         re_int='^[0-9]+$'
-        if ! [[ $nextRun =~ $re_int ]] ; then
-          echo "skipping $N: got non-integer value for nextRun: $nextRun"
+        if ! [[ $next_run =~ $re_int ]] ; then
+          echo "skipping $N: got non-integer value for next run: $next_run"
           continue
         fi
         
-        # check that nextRun is greater than zero
-        if ! [ $nextRun -gt 0 ] ; then
-          echo "skipping $N: got non-positive nextRun: $nextRun"
+        # check that next run is greater than zero
+        if ! [ $next_run -gt 0 ] ; then
+          echo "skipping $N: got non-positive next_run: $next_run"
           continue
         fi
         
         # success - transfer the run files
-        echo "Copying DiRPi run $N to cmsX as $nextRun"
+        echo "Copying DiRPi run $N to cmsX as $next_run"
         sudo cp /etc/ssh/ssh_config_rsync /etc/ssh/ssh_config
-        rsync -r -z -c --remove-source-files "$USB_DIR/Run$N/" "$CMSX_DIR/Run$nextRun"
-
+        rsync -r -z -c --remove-source-files "$SOURCE_DIR/Run$N/" "$CMSX_DIR/Run$next_run"
         # add run to global run log
-        echo "$ID $N  $nextRun" >> globalRuns.log 
-        
-      fi
-
-      # if the directory is empty now, remove it
-      if [ "$(ls -A $USB_DIR/Run$N/)" ]; then
-        echo "directory $USB_DIR/Run$N/ not empty - transfer may have failed"
-      else
-        echo "directory $USB_DIR/Run$N/ is empty; deleting it"
-        rmdir "$USB_DIR/Run$N/"
-      fi
-
+        echo "$ID $N  $next_run" >> globalRuns.log 
+      fi 
     fi
   done
 }
@@ -150,31 +146,19 @@ upsert_configs () {
   scp $SCHEDULE_PATH $CONFIG_FOLDER/json_response.json
 }
 
-# usage: timeout <n_seconds> <function_name>
-timeout() {
-	local cmd_pid sleep_pid retval
-	(shift; "$@") &   # shift out sleep value and run rest as command in background job
-	cmd_pid=$!
-	(sleep "$1"; kill "$cmd_pid" 2>/dev/null) &
-	sleep_pid=$!
-	wait "$cmd_pid"
-	retval=$?
-	kill "$sleep_pid" 2>/dev/null
-	return "$retval"
-}
-
 ############################################## main execution block
 check_connection 
 if [ $connected -eq 1 ]; then
   echo "Connection to tau.physics.ucsb.edu active"
-  run_with_timeout 300 copy_data
-  fetch_new_configs
-  upsert_configs
+  echo "Stopping DAQ."
+  ./dirpi.sh stop
+  run_with_timeout 300 copy_data $USB_DIR
+  #fetch_new_configs
+  #upsert_configs
   parachute
-
+  run_with_timeout 600 send_node_data
   echo "Processes:"
   top -n 1 -b | head -15
-  
 else
   echo "Connection to tau.physics.ucsb.edu is down"
 fi

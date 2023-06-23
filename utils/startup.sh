@@ -19,7 +19,7 @@ cleanup(){
         if [[ -d "$folder" && $(find "$folder" -maxdepth 1 -type f | wc -l) -lt 10 ]]; then
         rm -rf "$folder"
         echo "Removed folder: $folder"
-        else 
+        elif [ -d "$folder" ]; then
             echo "$folder has too many files. Archiving..." 
             if [ -d $usb ]; then 
                 tar czf "$usb/$folder.tar.gz" -C "$folder" .
@@ -59,6 +59,9 @@ start(){
     make clean 
     compile_compression 
     compile_DAQ
+
+    # setup nodes 
+    source "$HOME/dirpi/utils/node_manager.sh"; setup_nodes
 }
 
 start

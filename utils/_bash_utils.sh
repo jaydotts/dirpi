@@ -35,8 +35,6 @@ run_with_timeout() {
     # Kill the command process
     pkill -P "$command_pid"
     echo "Command killed after $timeout seconds"
-  else
-    echo "Command completed in $time_elapsed seconds"
   fi
 }
 

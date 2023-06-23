@@ -104,7 +104,7 @@ int main(int argc, char* argv[]){
                     output_folder+"/"+output_fname).c_str()
                     ); 
                 RunData.eventNum++; 
-                std::cout << '\r'<<"Events: "<< RunData.eventNum << std::flush;
+                //std::cout << '\r'<<"Events: "<< RunData.eventNum << std::flush;
             }
         }
 
