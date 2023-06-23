@@ -1,5 +1,4 @@
 # Makefile
-# use make -j3 to run all sources simultaneously. 
 
 CC = g++
 CFLAGS = -O 

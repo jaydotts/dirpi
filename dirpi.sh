@@ -94,6 +94,7 @@ DAQ () {
           printf '.' > /dev/tty
           ((count++))
         done 
+        echo "Run cycle complete."
         ;;
     
     stop-hard)
@@ -102,18 +103,6 @@ DAQ () {
           pkill -P $pid 
         fi
         ;;
-    
-    start-soft)
-        echo "[WARNING]: Code is not be re-compiled."
-        echo "Configuration changes WILL be loaded" 
-        if [ ! -z "$run_num" ]; then 
-            if [ ! -d "$output_folder" ]; then 
-                mkdir "$output_folder"
-                wait
-            fi
-        fi
-        make soft-reset RUN=$run_num
-    ;;
 
     *) 
         echo "Nothing to do"
@@ -182,4 +171,3 @@ manager () {
 
 echo "Command received."
 manager $1
-echo "Run Cycle complete."

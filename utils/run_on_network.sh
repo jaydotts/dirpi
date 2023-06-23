@@ -1,13 +1,15 @@
 #!/bin/bash
 #
-# Contains storage management protocols to be executed with and without internet. 
+# Contains storage management protocols to be executed when network
+# connection is available 
 #
 #
 #
+source "$HOME/dirpi/utils/_bash_utils.sh"
 RUN=$(tail -n 1 runlist.txt)
 ID=$(head -n 1 metadata/ID.txt)
 TARGET=128.111.19.32
-CONFIG_FOLDER="pmfreeman@tau.physics.ucsb.edu:/net/cms26/cms26r0/pmfreeman/XRD/DiRPi_v3/dirpi4/config"
+CONFIG_FOLDER="pmfreeman@tau.physics.ucsb.edu:/net/cms26/cms26r0/pmfreeman/XRD/DiRPi_v3/dirpi1/config"
 CONFIG_PATH="$CONFIG_FOLDER/*ini"
 SCHEDULE_PATH="$HOME/dirpi/config_templates/schedule.json"
 DIRPI_DIR="$HOME/dirpi"
@@ -165,7 +167,7 @@ timeout() {
 check_connection 
 if [ $connected -eq 1 ]; then
   echo "Connection to tau.physics.ucsb.edu active"
-  timeout 10 copy_data
+  run_with_timeout 300 copy_data
   fetch_new_configs
   upsert_configs
   parachute
