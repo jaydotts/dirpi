@@ -88,13 +88,17 @@ request_global_run(){
 # calls send_node_data from node manager
 send_node_data(){ 
   # make sure nodes are setup 
-  source $HOME/dirpi/utils/node_manager.sh; setup_nodes
+  # source $HOME/dirpi/utils/node_manager.sh; setup_nodes
   local node1_dir=$(. "$HOME/dirpi/utils/node_manager.sh"; echo $node1_dir)
   local node1_id=$(. "$HOME/dirpi/utils/node_manager.sh"; echo $node1_id)
   local node2_dir=$(. "$HOME/dirpi/utils/node_manager.sh"; echo $node2_dir)
   local node2_id=$(. "$HOME/dirpi/utils/node_manager.sh"; echo $node2_id)
   local node3_dir=$(. "$HOME/dirpi/utils/node_manager.sh"; echo $node3_dir)
   local node3_id=$(. "$HOME/dirpi/utils/node_manager.sh"; echo $node3_id)
+  
+  echo "NODE 1 DIR: $node1_dir"
+  echo "NODE 2 DIR: $node2_dir"
+  echo "NODE 3 DIR: $node3_dir"
   
   if [ -d "$node1_dir" ]; then
     copy_data $node1_dir $node1_id
@@ -145,6 +149,7 @@ copy_data(){
         echo "Copying DiRPi run $N to cmsX as $next_run"
         sudo cp /etc/ssh/ssh_config_rsync /etc/ssh/ssh_config
         rsync -r -z -c --remove-source-files "$SOURCE_DIR/Run$N/" "$CMSX_DIR/Run$next_run"
+        rmdir "$SOURCE_DIR/Run$N/"
         # add run to global run log
         echo "$ID $N  $next_run" >> globalRuns.log 
       fi 

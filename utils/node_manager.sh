@@ -13,18 +13,19 @@ node1_ip="128.111.19.148"
 node2_ip="128.111.19.45"
 node3_ip="128.111.19.149"
 USB_DIR=$(readlink -f /dev/disk/by-id/usb-* | while read dev;do mount | grep "$dev\b" | awk '{print $3}'; done)
-node1_dir=""
-node2_dir=""
-node3_dir=""
+node1_id="$(cat $HOME/dirpi/nodes/node1/ID.txt)"
+node2_id="$(cat $HOME/dirpi/nodes/node2/ID.txt)"
+node3_id="$(cat $HOME/dirpi/nodes/node3/ID.txt)"
+
+node1_dir="$USB_DIR/dirpi$node1_id"
+node2_dir="$USB_DIR/dirpi$node2_id"
+node3_dir="$USB_DIR/dirpi$node3_id"
 
 # default globals set in setup_nodes
 active_nodes=0
 node1_active=0
 node2_active=0
 node3_active=0
-node1_id=""
-node2_id=""
-node3_id=""
 
 # Pings nodes and returns 1 if nodes are active, 0 otherwise 
 ping_nodes() {
