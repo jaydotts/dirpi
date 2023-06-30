@@ -7,7 +7,9 @@ from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow, QPushButton
 import sys
 import configparser
 import subprocess
+from os import system
 
+buffer_path = sys.argv[1]
 
 config = configparser.ConfigParser()
 config.read('config/config.ini')
@@ -17,7 +19,7 @@ addr_depth = int(config['data']['memory_depth']) + plt_window_buff
 
 def readData():
     data = np.zeros((addr_depth,3))
-    with open("plot_buffer.txt",'r') as f: 
+    with open(str(buffer_path),'r') as f: 
         lines = f.readlines()
     f.close()
     for i,line in enumerate(lines): 

@@ -1,0 +1,1 @@
+{ "frequency": [ { "order": 0, "template": "beam0.ini", "repeats": 5 }, {"order":1, "template": "LYSO_bias_80.ini", "repeats": 1} ], "status": { "beam0.ini": 0 } }

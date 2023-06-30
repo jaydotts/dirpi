@@ -2,7 +2,6 @@
 cd "$HOME/dirpi"
 PIDFILE="$HOME/dirpi/run.pid"
 source "$HOME/dirpi/utils/_bash_utils.sh"
-default_run_lifetime=10800 # default time until run is killed in seconds
 
 #################################################### Process management 
 create_pidfile () {
@@ -73,11 +72,10 @@ DAQ () {
             fi
             # get absolute lifetime (in seconds) of run
             # pulls from config, or uses default of 10800 seconds (3hrs)
-            echo "starting DAQ"]
-            local abs_lifetime=$(parse_config "config/config.ini" "run_lifetime_s" $default_run_lifetime)
+            echo "starting DAQ"
             echo "Run=$run_num"
             rm ".stop"
-            run_with_timeout $abs_lifetime make DAQ RUN=$run_num
+            make DAQ RUN=$run_num
 
         else
             make compiler
@@ -119,7 +117,7 @@ manager () {
       then 
         date +'PID: $$ Previous instance is still active at %H:%M:%S, aborting ... '
       else 
-      trap exit_protocol EXIT
+      #trap exit_protocol EXIT
       echo "Updating config file"
       source "$HOME/dirpi/utils/update_configs.sh"
       create_pidfile
@@ -159,6 +157,7 @@ manager () {
       else 
       trap exit_protocol EXIT
       create_pidfile
+      rm ".stop"
       monitor 
       remove_pidfile
       fi 

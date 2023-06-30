@@ -611,7 +611,7 @@ public:
   vector<Event> Evts; // All events
   ifstream inF; // Used for writing .drp files
   ofstream outF; // Used for reading .drp files
-  Run() {Clear();}
+  Run() {Clear(); Evts.reserve(100);}
   void Clear(); // Clear all information
   void ClearEvts(); // Delete all events, but don't erase other information.
   void ClearPulses(); // Delete pulses from all events, but don't erase other information.
@@ -634,6 +634,7 @@ public:
   void DumpPulses(); // Write the pulses to the screen
   void Dump(); // Write event information to the screen
   void Display(int evtnum, int minT, int maxT); // Make an event display for the passed event number
+  void Monitor(int _fNum, bool web); // Dump monitoring variables for the full run to stdout
 };
 
 void Run::ClearEvts() {
@@ -1282,6 +1283,44 @@ void Run::Dump() {
   } // event loop
 }
 
+void Run::Monitor(int _fNum, bool web) {
+  // Dump monitoring information to the screen
+  // Two types of monitoring information is recorded, a human readable list and a compressed string.
+  // The human readable list is made by writing lines with
+  // MON KEYWORD runNum fNum values
+  // where KEYWORD cycles through various observables.
+  int firstEvt=0;
+  int lastEvt=0;
+  int totNPulses=0;
+  int dtime=1; // Time in ms
+  int EvtRate=0; // Number of events per minute
+  int PulseRate=0; // Number of pulses per minute
+  if (Evts.size()>0) {
+    firstEvt = Evts[0].evtNum;
+    lastEvt = Evts[Evts.size()-1].evtNum;
+    for (unsigned int i=0; i<Evts.size(); i++)
+      totNPulses += Evts[i].Pt.size();
+    dtime = Evts[Evts.size()-1].dRunTime; // Time in ms
+  }
+  EvtRate = int(0.5+(lastEvt-firstEvt)*60000./dtime); // Evts per minute
+  PulseRate = int(0.5+totNPulses*60000./dtime); // Evts per minute
+  cout << "MON starttime "<<runNum<<" "<<_fNum<<" "<<time<<'\n'; // Time of the start of this run (or file)
+  cout << "MON FirstEvt "<<runNum<<" "<<_fNum<<" "<<firstEvt<<'\n'; // First event number seen
+  cout << "MON LastEvt "<<runNum<<" "<<_fNum<<" "<<lastEvt<<'\n'; // Last event number seen
+  cout << "MON NPulses "<<runNum<<" "<<_fNum<<" "<<totNPulses<<'\n'; // Number of pulses in full run (or file)
+  cout << "MON dtime "<<runNum<<" "<<_fNum<<" "<<dtime<<'\n'; // Time between first and last event in ms
+  cout << "MON EvtRate "<<runNum<<" "<<_fNum<<" "<<EvtRate<<'\n'; // Number of events per minute
+  cout << "MON PulseRate "<<runNum<<" "<<_fNum<<" "<<PulseRate<<'\n'; // Number of pulses per minute
+  if (web) {
+    char cmd[1000];
+    std::string Cmd;
+    sprintf(cmd,"curl -s 'http://dstuart.physics.ucsb.edu/cgi-bin/SaveDiRPiMon?MON_%d_%d_%llu_%d_%d_%d_%d_%d_%d'",
+      runNum,_fNum,time,firstEvt,lastEvt,totNPulses,dtime,EvtRate,PulseRate);
+    Cmd = cmd;
+    system(Cmd.c_str());
+  }
+} // Run::Monitor
+
 int main(int argc, char *argv[])
 {
   // Set defaults for pulse finding
@@ -1328,17 +1367,23 @@ int main(int argc, char *argv[])
     r.runNum = rnum;
     r.ReadTXT(fnum);
     r.Proc();
-    //r.Dump();
     r.WriteDRP(fnum,true);
+    r.WriteDRP(fnum,false);
+    /*
+    if (fnum%10 == 0)
+      r.Monitor(fnum,true);
     return 0;
+    */
   } // Compress the file
   if (strncmp(argv[1],"savepulses",13)==0) { // Save only pulse information
     //cout << "Saving pulses for Run"<<rnum<<"_"<<fnum<<".txt\n";
+/*
     Run r;
     r.runNum = rnum;
     r.ReadTXT(fnum);
     r.Proc();
     r.WriteDRP(fnum,false);
+*/
     return 0;
   } // Compress the file
   if (strncmp(argv[1],"uncompress",13)==0) { // Compress the file
@@ -1432,6 +1477,14 @@ int main(int argc, char *argv[])
     r.Clear();
     return 0;
   } // Dump
+  if (strncmp(argv[1],"monitor",7)==0) { // Monitor information
+    Run r;
+    r.runNum = rnum;
+    r.ReadDRP(fnum);
+    r.Monitor(fnum,false);
+    r.Clear();
+    return 0;
+  } // Monitor
   // If we get here, there was an unexpected command
   cerr << "Unexpected command parameters. Nothing done.\n";
   return 1;
