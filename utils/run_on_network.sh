@@ -189,20 +189,25 @@ upsert_configs () {
 ############################################## main execution block
 check_connection 
 if [ $connected -eq 1 ]; then
-  echo "Connection to tau.physics.ucsb.edu active"
-  echo "Stopping DAQ."
-  $HOME/dirpi/dirpi.sh stop
-  fetch_node_configs
-  copy_data $USB_DIR $ID
-  fetch_new_configs
-#  upsert_configs
-  parachute
-  send_node_data
-  echo "Processes:"
-  top -n 1 -b | head -15
+  if [ ! -f ".on_network" ]; then 
+    touch ".on_network"
+    echo "Connection to tau.physics.ucsb.edu active"
+    echo "Stopping DAQ."
+    $HOME/dirpi/dirpi.sh stop
+    fetch_node_configs
+    copy_data $USB_DIR $ID
+    fetch_new_configs
+  #  upsert_configs
+    parachute
+    send_node_data
+    echo "Processes:"
+    top -n 1 -b | head -15
+    rm ".on_network"
+  fi 
 else
   echo "Connection to tau.physics.ucsb.edu is down"
 fi
 
 # cleanup  
 clean_sd || true
+rm ".on_network" || true

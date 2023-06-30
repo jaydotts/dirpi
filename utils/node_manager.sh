@@ -192,7 +192,7 @@ copy_node_data() {
             mkdir -p $node1_dir
             
             if [ -d "$node1_dir" ]; then
-                scp -r "$node1_user@$node1_ip:$node1_usb/Run*" "$node1_dir/"
+                scp -rv "$node1_user@$node1_ip:$node1_usb/Run*" "$node1_dir/"
                 if [ $? -eq 0 ]; then
                     # remove the src files
                     echo "SCP for node 1 complete, deleting src files."
@@ -220,7 +220,7 @@ copy_node_data() {
             mkdir -p $node2_dir
             
             if [ -d "$node2_dir" ]; then
-                scp -r "$node1_user@$node1_ip:$node1_usb/Run*" "$node2_dir/"
+                scp -rv "$node1_user@$node1_ip:$node1_usb/Run*" "$node2_dir/"
                 if [ $? -eq 0 ]; then
                     # remove the src files
                     echo "SCP for node 2 complete, deleting src files."
@@ -249,7 +249,7 @@ copy_node_data() {
             mkdir -p $node3_dir
             
             if [ -d "$node3_dir" ]; then
-                scp -r "$node3_user@$node3_ip:$node3_usb/Run*" "$node3_dir/"
+                scp -rv "$node3_user@$node3_ip:$node3_usb/Run*" "$node3_dir/"
                 if [ $? -eq 0 ]; then
                     # remove the src files
                     echo "SCP for node 3 complete, deleting src files."
