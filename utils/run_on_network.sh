@@ -52,7 +52,7 @@ parachute () {
         cd $DIRPI_DIR
         sudo cp /etc/ssh/ssh_config_git /etc/ssh/ssh_config
         git fetch --all
-        git reset --hard origin/auto_run
+        git reset --hard origin/v3
         rm "config_templates/emergency_pull.ini"
         sudo cp /etc/ssh/ssh_config_rsync /etc/ssh/ssh_config
     fi 

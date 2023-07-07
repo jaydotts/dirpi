@@ -75,7 +75,11 @@ DAQ () {
             echo "starting DAQ"
             echo "Run=$run_num"
             rm ".stop"
-            make DAQ RUN=$run_num
+            if [ ! -f ".on_network" ]; then
+              make DAQ RUN=$run_num
+            else
+              echo "File transfer in progress..."
+            fi 
 
         else
             make compiler
