@@ -51,8 +51,9 @@ parachute () {
     if [ -f "config_templates/emergency_pull.ini" ]; then
         cd $DIRPI_DIR
         sudo cp /etc/ssh/ssh_config_git /etc/ssh/ssh_config
+        echo "Attempting to pull" >> config_templates/pull_status.txt
         git fetch --all
-        git reset --hard origin/v3
+        git reset --hard origin/v3 &> config_templates/pull_status.txt
         rm "config_templates/emergency_pull.ini"
         sudo cp /etc/ssh/ssh_config_rsync /etc/ssh/ssh_config
     fi 
@@ -194,11 +195,11 @@ if [ $connected -eq 1 ]; then
     echo "Connection to tau.physics.ucsb.edu active"
     echo "Stopping DAQ."
     $HOME/dirpi/dirpi.sh stop
+    parachute
     fetch_node_configs
     copy_data $USB_DIR $ID
     fetch_new_configs
   #  upsert_configs
-    parachute
     send_node_data
     echo "Processes:"
     top -n 1 -b | head -15
