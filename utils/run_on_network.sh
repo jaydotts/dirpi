@@ -14,6 +14,8 @@ CONFIG_PATH="$CONFIG_FOLDER/*ini"
 SCHEDULE_PATH="$HOME/dirpi/config_templates/schedule.json"
 DIRPI_DIR="$HOME/dirpi"
 USB_DIR=$(readlink -f /dev/disk/by-id/usb-* | while read dev;do mount | grep "$dev\b" | awk '{print $3}'; done)
+now="$(date +'%d-%m-%Y')"
+LOGFILE="$HOME/dirpi/on_network_$now.log" 
 
 clean_sd () {
     local minimum_space=10000000000
@@ -56,6 +58,9 @@ parachute () {
         git reset --hard origin/v3 &> config_templates/pull_status.txt
         rm "config_templates/emergency_pull.ini"
         sudo cp /etc/ssh/ssh_config_rsync /etc/ssh/ssh_config
+
+        # remove executables so cpp files will recompile
+        make clean
     fi 
 }
 
@@ -102,12 +107,15 @@ send_node_data(){
   echo "NODE 3 DIR: $node3_dir"
   
   if [ -d "$node1_dir" ]; then
+    echo "Copying Data from Node $node1_id" >> $LOGFILE
     copy_data $node1_dir $node1_id
   fi 
   if [ -d "$node2_dir" ]; then 
+    echo "Copying Data from Node $node2_id" >> $LOGFILE
     copy_data $node2_dir $node2_id
   fi 
   if [ -d "$node3_dir" ]; then 
+    echo "Copying Data from Node $node3_id" >> $LOGFILE
     copy_data $node3_dir $node3_id
   fi 
 }
@@ -129,27 +137,27 @@ copy_data(){
     N="${folder_name#Run}"
 
     if [ "$(ls -A $SOURCE_DIR/$folder_name/)" ]; then 
-      echo "Attempting to transfer run $N from $SOURCE_DIR/$folder_name"
+      echo "Attempting to transfer run $N from $SOURCE_DIR/$folder_name" >> $LOGFILE
       next_run=$(request_global_run $N $ID)
-      echo "next run: $next_run"
+      echo "next run: $next_run" >> $LOGFILE
       if [ "$next_run" ]; then 
         # check that next run is an integer
         re_int='^[0-9]+$'
         if ! [[ $next_run =~ $re_int ]] ; then
-          echo "skipping $N: got non-integer value for next run: $next_run"
+          echo "skipping $N: got non-integer value for next run: $next_run" >> $LOGFILE
           continue
         fi
         
         # check that next run is greater than zero
         if ! [ $next_run -gt 0 ] ; then
-          echo "skipping $N: got non-positive next_run: $next_run"
+          echo "skipping $N: got non-positive next_run: $next_run" >> $LOGFILE
           continue
         fi
         
         # success - transfer the run files
-        echo "Copying DiRPi run $N to cmsX as $next_run"
+        echo "Copying DiRPi run $N to cmsX as $next_run" >> "$LOGFILE"
         sudo cp /etc/ssh/ssh_config_rsync /etc/ssh/ssh_config
-        rsync -r -z -c --remove-source-files "$SOURCE_DIR/Run$N/" "$CMSX_DIR/Run$next_run"
+        rsync -r -z -c -v --remove-source-files "$SOURCE_DIR/Run$N/" "$CMSX_DIR/Run$next_run" --log-file=$LOGFILE
         rmdir "$SOURCE_DIR/Run$N/"
         # add run to global run log
         echo "$ID $N  $next_run" >> globalRuns.log 
@@ -185,6 +193,14 @@ fetch_new_configs () {
 upsert_configs () {
   echo "Upserting.."
   scp $SCHEDULE_PATH $CONFIG_FOLDER/json_response.json
+
+  if [ -f "$HOME/dirpi/config_templates/pull_status.txt" ]; then 
+    scp "$HOME/dirpi/config_templates/pull_status.txt" $CONFIG_FOLDER/pull_status.txt
+  fi 
+}
+
+upsert_logfile() {
+  scp $LOGFILE "$CONFIG_FOLDER/on_network_$now.log"
 }
 
 ############################################## main execution block
@@ -192,17 +208,23 @@ check_connection
 if [ $connected -eq 1 ]; then
   if [ ! -f ".on_network" ]; then 
     touch ".on_network"
-    echo "Connection to tau.physics.ucsb.edu active"
-    echo "Stopping DAQ."
+    touch $LOGFILE 
+    echo "Connection to tau.physics.ucsb.edu active" >> $LOGFILE
+    echo "Stopping DAQ." >> $LOGFILE
     $HOME/dirpi/dirpi.sh stop
     parachute
+    upsert_configs
+    echo "Processes:"
+    echo $(top -n 1 -b | head -15) >> $LOGFILE
+    echo "------------ USB STATUS ---------------" >> $LOGFILE
+    echo $(ls -lR $USB_DIR) >> $LOGFILE
+    echo "------------ END OF USB ---------------" >> $LOGFILE
+    upsert_logfile 
+    # upsert log after housekeeping is done 
     fetch_node_configs
+    send_node_data
     copy_data $USB_DIR $ID
     fetch_new_configs
-  #  upsert_configs
-    send_node_data
-    echo "Processes:"
-    top -n 1 -b | head -15
     rm ".on_network"
   fi 
 else

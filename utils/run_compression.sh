@@ -137,10 +137,10 @@ run_compression(){
 
     # run compression method until stop condition met
     while [ ! -f ".stop" ]; do
-        run_with_timeout 10 compress $fullpath
+        run_with_timeout 1200 compress $fullpath
     done
 
-    run_with_timeout 5 cleanup 
+    run_with_timeout 1200 cleanup 
 }
 
 # main execution

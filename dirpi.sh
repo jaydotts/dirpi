@@ -79,6 +79,7 @@ DAQ () {
               make DAQ RUN=$run_num
             else
               echo "File transfer in progress..."
+              touch ".stop"
             fi 
 
         else
