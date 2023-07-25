@@ -53,7 +53,7 @@ DAQ () {
         run_num=$((run_num+1))
         printf "%i\n" $run_num >> runlist.txt
 
-        output_folder="Run"$run_num
+        output_folder="newdata/Run"$run_num
 
         if [ ! -z "$run_num" ]; then 
 

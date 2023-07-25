@@ -9,7 +9,7 @@ dir="$HOME/dirpi"
 source "$dir/utils/_bash_utils.sh"
 run_num=$1
 output_folder="Run$run_num"
-fullpath="$dir/$output_folder"
+fullpath="$dir/newdata/$output_folder"
 USB_DIR=$(readlink -f /dev/disk/by-id/usb-* | while read dev;do mount | grep "$dev\b" | awk '{print $3}'; done)
 stop_runs=0
 

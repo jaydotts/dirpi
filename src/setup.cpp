@@ -121,7 +121,7 @@ bool setupFiles(int run_num){
     }
     else{
         fname_prefix = "Run"+std::to_string(run_num);
-        output_folder = "Run"+std::to_string(run_num);
+        output_folder = "newdata/Run"+std::to_string(run_num);
 
         if(ispath(output_folder.c_str())){
             config->record_data=true; 
