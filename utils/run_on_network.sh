@@ -207,7 +207,7 @@ upsert_logfile() {
 check_connection 
 if [ $connected -eq 1 ]; then
   if [ ! -f ".on_network" ]; then 
-    touch ".on_network"
+    touch "$HOME/dirpi/.on_network"
     touch $LOGFILE 
     echo "Connection to tau.physics.ucsb.edu active" >> $LOGFILE
     echo "Stopping DAQ." >> $LOGFILE
@@ -225,7 +225,7 @@ if [ $connected -eq 1 ]; then
     send_node_data
     copy_data $USB_DIR $ID
     fetch_new_configs
-    rm ".on_network"
+    rm "$HOME/dirpi/.on_network"
   fi 
 else
   echo "Connection to tau.physics.ucsb.edu is down"

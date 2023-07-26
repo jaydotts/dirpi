@@ -174,12 +174,15 @@ monitor_nodes(){
 }
 
 copy_node_data() {
-    
     # setup node directories
     setup_nodes
     
     # check that USB is inserted before copying
     if [ ! -d $USB_DIR ]; then echo "USB NOT INSERTED"; return; fi
+    
+    # stop data acquisition
+    source $HOME/dirpi/dirpi.sh stop
+    touch "$HOME/dirpi/.on_network"
     
     # copy data from each node in series 
     if [ $node1_active -eq 1 ]; then 
@@ -220,7 +223,7 @@ copy_node_data() {
             mkdir -p $node2_dir
             
             if [ -d "$node2_dir" ]; then
-                scp -rv "$node1_user@$node1_ip:$node1_usb/Run*" "$node2_dir/"
+                scp -rv "$node2_user@$node2_ip:$node2_usb/Run*" "$node2_dir/"
                 if [ $? -eq 0 ]; then
                     # remove the src files
                     echo "SCP for node 2 complete, deleting src files."
@@ -268,4 +271,6 @@ copy_node_data() {
     else
         echo "[WARNING] node3 inactive."
     fi
+    
+    rm "$HOME/dirpi/.on_network"
 }
