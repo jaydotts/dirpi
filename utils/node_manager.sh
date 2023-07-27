@@ -182,7 +182,9 @@ copy_node_data() {
     
     # stop data acquisition
     source $HOME/dirpi/dirpi.sh stop
-    touch "$HOME/dirpi/.on_network"
+    
+    if [ -f "$HOME/dirpi/.copying_nodes" ]; then echo "COPY IN PROGRESS"; return; fi
+    touch "$HOME/dirpi/.copying_nodes"
     
     # copy data from each node in series 
     if [ $node1_active -eq 1 ]; then 
@@ -228,7 +230,7 @@ copy_node_data() {
                     # remove the src files
                     echo "SCP for node 2 complete, deleting src files."
                     # UN-COMMENT THIS LINE BEFORE OFFICIAL LAUNCH
-                    #ssh "$node2_user@$node2_ip" "rm -rf $node2_usb/Run*"
+                    ssh "$node2_user@$node2_ip" "rm -rf $node2_usb/Run*"
                 else
                     echo "[WARNING] SCP for node 2 incomplete. Keeping src files."
                 fi
@@ -257,7 +259,7 @@ copy_node_data() {
                     # remove the src files
                     echo "SCP for node 3 complete, deleting src files."
                     # UN-COMMENT THIS LINE BEFORE OFFICIAL LAUNCH
-                    #ssh "$node3_user@$node3_ip" "rm -rf $node3_usb/Run*"
+                    ssh "$node3_user@$node3_ip" "rm -rf $node3_usb/Run*"
                 else
                     echo "[WARNING] SCP for node 3 incomplete. Keeping src files."
                 fi
@@ -272,5 +274,5 @@ copy_node_data() {
         echo "[WARNING] node3 inactive."
     fi
     
-    rm "$HOME/dirpi/.on_network"
+    rm "$HOME/dirpi/.copying_nodes"
 }
