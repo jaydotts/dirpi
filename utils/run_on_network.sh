@@ -207,6 +207,7 @@ upsert_logfile() {
 check_connection 
 if [ $connected -eq 1 ]; then
   if [ ! -f ".on_network" ]; then 
+    rm "$HOME/dirpi/.copying_nodes"
     touch "$HOME/dirpi/.on_network"
     touch $LOGFILE 
     echo "Connection to tau.physics.ucsb.edu active" >> $LOGFILE
