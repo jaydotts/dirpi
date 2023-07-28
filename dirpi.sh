@@ -67,6 +67,7 @@ DAQ () {
             fi 
 
             if [ ! -d "$output_folder" ]; then 
+                rm -rf "newdata/Run*"
                 mkdir "$output_folder"
                 wait
             fi
