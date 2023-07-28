@@ -97,7 +97,7 @@ manager () {
       trap remove_pidfile EXIT
       create_pidfile
       DAQ start
-      remove_pidfile
+      #remove_pidfile
       source "$HOME/dirpi/check_network.sh"
       fi
       ;;

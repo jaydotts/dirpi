@@ -3,10 +3,12 @@
 RUN=$(tail -n 1 runlist.txt)
 ID=$(head -n 1 metadata/ID.txt)
 TARGET=128.111.19.32
-CONFIG_FOLDER="pmfreeman@tau.physics.ucsb.edu:/net/cms26/cms26r0/pmfreeman/XRD/DiRPi_v3/dirpi4/config"
+CONFIG_FOLDER="pmfreeman@tau.physics.ucsb.edu:/net/cms26/cms26r0/pmfreeman/XRD/DiRPi_v3/dirpi5/config"
 CONFIG_PATH="$CONFIG_FOLDER/*ini"
 SCHEDULE_PATH="$HOME/dirpi/config_templates/schedule.json"
 DIRPI_DIR="$HOME/dirpi"
+USB_DIR=$(readlink -f /dev/disk/by-id/usb-* | while read dev;do mount | grep "$dev\b" | awk '{print $3}'; done)
+CMSX_PATH="pmfreeman@tau.physics.ucsb.edu:/net/cms26/cms26r0/pmfreeman/XRD/DiRPi_v3/dirpi5"
 
 clean_sd () {
     local minimum_space=10000000000
@@ -64,23 +66,23 @@ check_connection () {
 
 # copies data from USB to cms server
 copy_data () {
-  N=200
+  N=0
   echo "Copying data to cms" 
 
   while [ $N -lt $RUN ]; do
     #echo $N
     N=$((N+1))
-    if [ -e "/media/dirpi4/4E79-9470/Run$N/" ]; then
+    if [ -e "$USB_DIR/Run$N/" ]; then
       url="http://cms2.physics.ucsb.edu/cgi-bin/NextDiRPiRun?RUN=$N&ID=$ID"
       echo $url
       next=$(curl -s $url)
       nextRun=$next #${next:64:4}
     #  echo "$ID $N  $nextRun \n" >> globalRuns.log 
       echo "Copying DiRPi run $N to cmsX as $nextRun"
-      rsync -r -z -c --remove-source-files "/media/dirpi4/4E79-9470/Run$N/" "pmfreeman@tau.physics.ucsb.edu:/net/cms26/cms26r0/pmfreeman/XRD/DiRPi_v3/dirpi4/Run$nextRun"
-      if [ !$ans ] ; then
+      rsync -r -z -c --remove-source-files "$USB_DIR/Run$N/" "$CMSX_PATH/Run$nextRun"
+      if [ $? ] ; then
         echo "Runs moved to cmsX successfully. Deleting..."
-        rm -r "/media/dirpi4/4E79-9470/Run$N/"
+        rmdir "$USB_DIR/Run$N/"
       fi
       echo "$ID $N  $nextRun" >> globalRuns.log 
     fi
@@ -176,7 +178,7 @@ update_configs () {
     echo "done. overwriting json" 
     echo $updated_json > tmp && mv tmp $SCHEDULE_PATH
   else 
-    echo "Config file not in templates."
+    echo "Config file $HOME/dirpi/config_templates/$new_configs  not in templates."
     #echo $updated_json > tmp && mv tmp $SCHEDULE_PATH
   fi
 }

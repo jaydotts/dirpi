@@ -84,7 +84,7 @@ moveTo_usb(){
     fi 
 
     nice ${dir}/DiRPi lossycompress $run_num $fnum
-    nice ${dir}/DiRPi savepulses $run_num $fnum
+    #nice ${dir}/DiRPi savepulses $run_num $fnum
     sudo mv Run${run_num}_${fnum}.drpw $usb/$output_folder/Run${run_num}_${fnum}.drpw
     sudo mv Run${run_num}_${fnum}.drp $usb/$output_folder/Run${run_num}_${fnum}.drp
     cd -
@@ -114,7 +114,7 @@ while [ ! -f ".stop" ]; do
     compress $fullpath
 done
 
-for FILE in $(cd $fullpath && ls -trp *.txt | grep -v '/$' | head)
+for FILE in $(cd $fullpath && ls -trp *.txt | grep -v '/$' | head --lines -0)
     do  
         moveTo_usb $FILE 
     done 
