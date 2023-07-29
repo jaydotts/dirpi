@@ -1,3 +1,4 @@
 ECHOUSB=$("utils/echo_usb.sh")
-mkdir "$ECHOUSB/NewData/"
+mkdir -p "$ECHOUSB/NewData/"
+rm newdata
 ln -s "$ECHOUSB/NewData/" newdata 
