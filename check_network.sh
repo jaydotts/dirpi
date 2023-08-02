@@ -1,5 +1,4 @@
 #!/bin/bash
-
 RUN=$(tail -n 1 runlist.txt)
 ID=$(head -n 1 metadata/ID.txt)
 TARGET=128.111.19.32
@@ -96,93 +95,52 @@ fetch_configs () {
 }
 
 # updates configuration schedule
-update_schedule () {
-  cp $SCHEDULE_PATH metadata/prev_schedule.json
-  local curr_file=$(jq -r '.status | keys_unsorted[]' "$SCHEDULE_PATH")
-  local curr_cnt=$(jq -r '.status."'$curr_file'"' "$SCHEDULE_PATH")
-  local next_file=$curr_file
-  updated_json=$(jq '' $SCHEDULE_PATH)
 
-  local objects=$(jq -r '
-                .frequency | 
-                keys[] as $k | 
-                "\($k), \(.[$k])"' $SCHEDULE_PATH)
+update_configs(){
+  #cp $SCHEDULE_PATH metadata/prev_schedule.txt
+  local index_file="config/_status.ini"
+  index=$(awk -F "=" '/index/ {print $2}' $index_file | tr -d ' ')
 
-  local index=$(jq --arg key $curr_file '.frequency[] |
-                select(.template == $key) | 
-                .order' $SCHEDULE_PATH)
+  # read the schedule 
+  local config_arr=()
+  filename="config/schedule.txt"
+  if [ ! -f $filename ]; then touch $filename; fi
 
-  echo "File: $curr_file"
-  echo "Count: $curr_cnt"
-  echo "Current index: $index"
+  # load config file list into array
+  while IFS= read -r line
+  do
+    config_arr+=("$line")
+  done < "$filename"
 
-  echo "checking if key exists"
-  if [[ -n $index ]]; then
-    echo "key exists"
-    local max_cnt=$(jq --arg key $curr_file '.frequency[] |
-                  select(.template == $key) | 
-                  .repeats' $SCHEDULE_PATH)
-    if [ $max_cnt -gt $curr_cnt ]; then 
-      echo "advancing counter..."
-      # repeat config, increment counter, no change
-      ((curr_cnt++))
-      updated_json=$(jq --arg key $curr_file \
-                      --argjson value $curr_cnt '.status[$key]=$value' \
-                      $SCHEDULE_PATH)
-    else 
-      echo "Moving to next config file"
-      # go to the next one in order
-      ((index++))
-      local length=$(jq '.frequency | length' $SCHEDULE_PATH)
-      echo "next index $index"
-      echo "length $length"
-      if [ $index -eq $length ]; then 
-      echo "end of list" 
-        # end of list, return to top
-        local init=$(jq '.frequency[] |
-                      select(.order == 0) | .template' $SCHEDULE_PATH)
-        echo "Returning to $init"
-        updated_json=$(jq --argjson key $init \
-                        '.status={ ($key):1 }' \
-                        $SCHEDULE_PATH)
-      else 
-        # move to next in order
-        local next_file=$(jq --argjson order $index \
-                        '.frequency[] |
-                        select(.order == $order) | 
-                        .template' $SCHEDULE_PATH)
-        echo "New file: $next_file"
-        updated_json=$(jq --argjson key $next_file \
-                      '.status={ ($key):1 }' \
-                      $SCHEDULE_PATH)
-      fi 
-    fi
-  else 
-    echo "key $curr_file does not exist. Resetting to default"
-    cp metadata/schedule_default.json $SCHEDULE_PATH
-    local init=$(jq '.frequency[] |
-              select(.order == 0) | .template' $SCHEDULE_PATH)
-    updated_json=$(jq --argjson key $init \
-          '.status={ ($key):1 }' \
-          $SCHEDULE_PATH)
+  # return if it is empty
+  if [ ! -n "${#config_arr[@]}" ]; then 
+    echo "schedule is empty. Exiting."
+    return
   fi
-}
 
-update_configs () { 
-  update_schedule
-  local new_configs=$(echo $updated_json | jq '.status | keys_unsorted[0]' | tr -d '"')
-  local target=$HOME/dirpi/config_templates/$new_configs
-  if [ -f "$HOME/dirpi/config_templates/$new_configs" ]; then
-    echo "file found. copying to config.ini.." 
-    cp $target "$HOME/dirpi/config/config.ini"
-    echo "done. overwriting json" 
-    echo $updated_json > tmp && mv tmp $SCHEDULE_PATH
-  else 
-    echo "Config file $HOME/dirpi/config_templates/$new_configs  not in templates."
-    #echo $updated_json > tmp && mv tmp $SCHEDULE_PATH
-  fi
-}
+  current_file=${config_arr[$index]}
+  echo "CURRENT FILE: $current_file"
+  next_index=$((index+1))
+  next_file=${config_arr[$next_index]}
+  echo "NEXT FILE: $next_file"
 
+  # copy file at current index
+  if [ -f "config/$current_file" ]; then 
+    cp "config$current_file" "config/config.ini"
+  else
+    echo "WARNING: $current_file not in config folder."
+  fi 
+
+  if [ ! -n "$next_file" ];then 
+    echo "NOTE: ${config_arr[$index]} is last file in schedule"
+    next_file=${config_arr[0]}
+    next_index=0
+  fi 
+
+  # advance the index
+  echo "index=$next_index" > "config/_status.ini"
+
+}
 
 upsert_configs () {
   echo "Upserting.."
@@ -193,14 +151,13 @@ upsert_configs () {
 check_connection 
 if [ $connected -eq 1 ]; then
   echo "Connection to tau.physics.ucsb.edu active"
+  parachute
   copy_data
   fetch_configs
   update_configs
-  upsert_configs
-  parachute
 
-  echo "Processes:"
-  top -n 1 -b | head -15
+  #echo "Processes:"
+  #top -n 1 -b | head -15
   
 else
   echo "Connection to tau.physics.ucsb.edu is down"
@@ -211,3 +168,4 @@ fi
 clean_sd || true
 
 echo "Run cycle complete. Waiting for next run..."
+
