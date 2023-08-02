@@ -42,6 +42,7 @@ ping_nodes() {
             node1_active=0
         fi
         node1_id=$(ssh "$node1_user@$node1_ip" "cat dirpi/metadata/ID.txt")
+    
         if [ ! -n "$node1_id" ]; then
             echo "[WARNING] Node 1 ID not found"
             node1_active=0
@@ -107,6 +108,8 @@ setup_nodes(){
 
     if [ $node1_active -eq 1 ]; then 
         node1_id=$(ssh "$node1_user@$node1_ip" "head -n 1 dirpi/metadata/ID.txt")
+        #make usb link        
+        ssh "$node1_user@$node1_ip" " dirpi/utils/make_USB_link.sh"
         if [ -n "$node1_id" ]; then 
             node1_dir="$USB_DIR/dirpi$node1_id"
             echo "Node 1 directory created at $node1_dir"
@@ -116,6 +119,7 @@ setup_nodes(){
     fi
     if [ $node2_active -eq 1 ]; then 
         local node2_id=$(ssh "$node2_user@$node2_ip" "head -n 1 dirpi/metadata/ID.txt")
+        ssh "$node2_user@$node2_ip" " dirpi/utils/make_USB_link.sh"
         if [ -n "$node2_id" ]; then 
             node2_dir="$USB_DIR/dirpi$node2_id"
             echo "Node 2 directory created at $node2_dir"
@@ -125,6 +129,7 @@ setup_nodes(){
     fi 
     if [ $node3_active -eq 1 ]; then 
         local node3_id=$(ssh "$node3_user@$node3_ip" "head -n 1 dirpi/metadata/ID.txt")
+        ssh "$node3_user@$node3_ip" " dirpi/utils/make_USB_link.sh"
         if [ -n "$node3_id" ]; then 
             node3_dir="$USB_DIR/dirpi$node3_id"
             echo "Node 3 directory created at $node3_dir"
