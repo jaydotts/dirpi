@@ -99,12 +99,15 @@ fetch_configs () {
 update_configs(){
   #cp $SCHEDULE_PATH metadata/prev_schedule.txt
   local index_file="config/_status.ini"
-  index=$(awk -F "=" '/index/ {print $2}' $index_file | tr -d ' ')
+  local index=$(awk -F "=" '/index/ {print $2}' $index_file | tr -d ' ')
 
   # read the schedule 
   local config_arr=()
   filename="config/schedule.txt"
-  if [ ! -f $filename ]; then touch $filename; fi
+  if [ ! -f $index_file ]; then 
+      touch $index_file
+      echo "index=0" > $index_file; 
+  fi
 
   # load config file list into array
   while IFS= read -r line
