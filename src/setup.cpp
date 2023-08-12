@@ -55,10 +55,10 @@ void setupPins(){
     pinMode(TrgExtEn,OUTPUT);
     pinMode(Trg1En,OUTPUT);
     pinMode(Trg2En,OUTPUT);
-    pinMode(PSCL,OUTPUT);
+    pinMode(PSCL,PWM_OUTPUT);
 
     // set channel prescale
-    digitalWrite(PSCL,config->PSCLduty);
+    pwmWrite(PSCL,config->PSCLduty);
     digitalWrite(ISDA,config->and_enabled);
 }
 

@@ -1,6 +1,7 @@
 #!/bin/bash
-cd "$HOME/dirpi"
-PIDFILE="$HOME/dirpi/run.pid"
+ID=$(head -n 1 metadata/ID.txt)
+cd "/home/dirpi$ID/dirpi/"
+PIDFILE="/home/dirpi$ID/dirpi/run.pid"
 
 create_pidfile () {
   echo $$ > "$PIDFILE"
@@ -97,8 +98,8 @@ manager () {
       trap remove_pidfile EXIT
       create_pidfile
       DAQ start
-      #remove_pidfile
-      source "$HOME/dirpi/check_network.sh"
+      remove_pidfile
+      source "/home/dirpi$ID/dirpi/check_network.sh"
       fi
       ;;
 

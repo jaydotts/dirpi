@@ -1,13 +1,14 @@
 #!/bin/bash
+
 RUN=$(tail -n 1 runlist.txt)
 ID=$(head -n 1 metadata/ID.txt)
 TARGET=128.111.19.32
-CONFIG_FOLDER="pmfreeman@tau.physics.ucsb.edu:/net/cms26/cms26r0/pmfreeman/XRD/DiRPi_v3/dirpi5/config"
+CONFIG_FOLDER="pmfreeman@tau.physics.ucsb.edu:/net/cms26/cms26r0/pmfreeman/XRD/DiRPi_v3/dirpi$ID/config"
 CONFIG_PATH="$CONFIG_FOLDER/*ini"
-SCHEDULE_PATH="$HOME/dirpi/config_templates/schedule.json"
-DIRPI_DIR="$HOME/dirpi"
+SCHEDULE_PATH="/home/dirpi$ID/dirpi/config_templates/schedule.json"
+DIRPI_DIR="/home/dirpi$ID/dirpi"
 USB_DIR=$(readlink -f /dev/disk/by-id/usb-* | while read dev;do mount | grep "$dev\b" | awk '{print $3}'; done)
-CMSX_PATH="pmfreeman@tau.physics.ucsb.edu:/net/cms26/cms26r0/pmfreeman/XRD/DiRPi_v3/dirpi5"
+CMSX_PATH="pmfreeman@tau.physics.ucsb.edu:/net/cms26/cms26r0/pmfreeman/XRD/DiRPi_v3/dirpi$ID"
 
 clean_sd () {
     local minimum_space=10000000000
@@ -108,8 +109,7 @@ update_configs(){
       touch $index_file
       echo "index=0" > $index_file; 
   fi
-
-  # load config file list into array
+ # load config file list into array
   while IFS= read -r line
   do
     config_arr+=("$line")
@@ -120,7 +120,6 @@ update_configs(){
     echo "schedule is empty. Exiting."
     return
   fi
-
   current_file=${config_arr[$index]}
   echo "CURRENT FILE: $current_file"
   next_index=$((index+1))
@@ -129,7 +128,7 @@ update_configs(){
 
   # copy file at current index
   if [ -f "config/$current_file" ]; then 
-    cp "config$current_file" "config/config.ini"
+    cp "config/$current_file" "config/config.ini"
   else
     echo "WARNING: $current_file not in config folder."
   fi 
@@ -139,11 +138,10 @@ update_configs(){
     next_file=${config_arr[0]}
     next_index=0
   fi 
-
   # advance the index
   echo "index=$next_index" > "config/_status.ini"
-
 }
+
 
 upsert_configs () {
   echo "Upserting.."
@@ -158,9 +156,10 @@ if [ $connected -eq 1 ]; then
   copy_data
   fetch_configs
   update_configs
+  
 
-  #echo "Processes:"
-  #top -n 1 -b | head -15
+#  echo "Processes:"
+#  top -n 1 -b | head -15
   
 else
   echo "Connection to tau.physics.ucsb.edu is down"
@@ -171,4 +170,3 @@ fi
 clean_sd || true
 
 echo "Run cycle complete. Waiting for next run..."
-

@@ -1,6 +1,6 @@
 #!/bin/bash
-
-dir="$HOME/dirpi"
+ID=$(head -n 1 metadata/ID.txt)
+dir="/home/dirpi$ID/dirpi"
 run_num=$1
 output_folder="Run$run_num"
 fullpath="$dir/$output_folder"
