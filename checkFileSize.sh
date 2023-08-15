@@ -84,8 +84,8 @@ moveTo_usb(){
     fi 
 
     nice ${dir}/DiRPi lossycompress $run_num $fnum
-    #nice ${dir}/DiRPi savepulses $run_num $fnum
     sudo mv Run${run_num}_${fnum}.drpw $usb/$output_folder/Run${run_num}_${fnum}.drpw
+    nice ${dir}/DiRPi savepulses $run_num $fnum
     sudo mv Run${run_num}_${fnum}.drp $usb/$output_folder/Run${run_num}_${fnum}.drp
     cd -
     rm "$fullpath/$1"

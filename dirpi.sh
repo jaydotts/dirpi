@@ -1,5 +1,6 @@
 #!/bin/bash
-ID=$(head -n 1 metadata/ID.txt)
+#ID=$(head -n 1 ~/dirpi/metadata/ID.txt)
+ID=12
 cd "/home/dirpi$ID/dirpi/"
 PIDFILE="/home/dirpi$ID/dirpi/run.pid"
 
@@ -99,7 +100,7 @@ manager () {
       create_pidfile
       DAQ start
       remove_pidfile
-      source "/home/dirpi$ID/dirpi/check_network.sh"
+    #  source "/home/dirpi$ID/dirpi/check_network.sh"
       fi
       ;;
 
@@ -137,6 +138,7 @@ manager () {
       date +"[%H:%M:%S] Nothing to do. Exiting..."
       ;;
   esac 
+  source "/home/dirpi$ID/dirpi/check_network.sh"
 }
 echo "Triggering DAQ"
 manager $1
