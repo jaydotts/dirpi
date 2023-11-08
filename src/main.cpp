@@ -13,6 +13,7 @@
 #include <string> 
 #include <iostream>
 #include <fstream>
+
 using namespace std; 
 
 /* 
@@ -63,6 +64,32 @@ int main(int argc, char* argv[]){
 
         
         int file_count = 0; 
+        uint64_t tLive = 0;
+        uint64_t tDead = 0;
+        uint64_t t1{0}, t2{0};
+
+/*
+// Hack test of time delay for getTimeus
+uint64_t tstart1{0};
+sscanf(getTimeus().c_str(), "%llu", &tstart1);
+t1 = 0;
+for (int i=0; i<1000000; i++){
+  sscanf(getTimeus().c_str(), "%llu", &t2);
+  t1 += t2;
+}
+std::cout << "getTimeus test is "<< t2-tstart1 << " in 1M loops\n";
+FILE *hack_output;
+char hack_buffer[50];
+sprintf(hack_buffer, "hack.txt");
+hack_output = fopen(hack_buffer,"w");
+fprintf(hack_output, "getTimeus test is %llu %llu %llu in 1M loops\n", t2, tstart1, t2-tstart1);
+fclose(hack_output);
+// End of hack test
+*/
+
+t2 = 0;
+
+        sscanf(getTimeus().c_str(), "%llu", &t1);
         while(!isfile(".stop") & (file_count < 2+max_files)){ 
 
             if (RunData.eventNum % config->events_perFile == 0 & config->record_data){  
@@ -83,24 +110,27 @@ int main(int argc, char* argv[]){
 
             // enable SRAM sampling
             RAM.enable_sampling();
+            sscanf(getTimeus().c_str(), "%llu", &t2);
 
             // use run configs to enable/disable triggers
             if(config->trg1){Trg1.enable();}
             if(config->trg2){Trg2.enable();}
             if(config->extrg){enable_extrg();}
 
+            tDead = t2 - t1; 
+
             // wait for OE* to go high -> indicates that 
             // trigger runout has gone high 
             while(ReadPin(OEbar)==1); 
+            sscanf(getTimeus().c_str(), "%llu", &t1);
+            tLive=t1 -t2;
             digitalWrite(DAQHalt,1);
             digitalWrite(DAQHalt,1);
             digitalWrite(DAQHalt,1);
             RunData.Read(); 
-            RunData.Write((
-                output_folder+"/"+output_fname).c_str()
-                ); 
+            RunData.Write(
+                (output_folder+"/"+output_fname).c_str(), tLive, tDead, t1); 
             RunData.eventNum++; 
-            //std::cout << '\r'<<"Events: "<< RunData.eventNum << std::flush;
         }
 
         std::cout<<"Total Events: "<<RunData.eventNum<<endl;

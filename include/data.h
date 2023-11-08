@@ -23,7 +23,7 @@ class Data{
         int eventNum = 0; 
         void read_bytes(); 
         void Read();
-        void Write(const char *fname); 
+        void Write(const char *fname, int64_t tLive, int64_t tDead, int64_t tEvent); 
         void CountTriggers(int nclocks); 
         std::string PrintConfigs(); 
 };

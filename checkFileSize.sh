@@ -19,9 +19,9 @@ check_usb () {
         return
     fi 
     
-    local size=$(
-        du -bs $USB_DIR | awk '{print $1}'
-    )
+#    local size=$(
+#        du -bs $USB_DIR | awk '{print $1}'
+#    )
     local space=$(
         df -B 1 --output=avail "$USB_DIR" | tail -n 1
     )
@@ -30,7 +30,7 @@ check_usb () {
         echo "[ERROR] Space is critical (<1GB). Pausing runs.."
         echo "Bytes available: $space"
         stop_runs=1
-    elif [ $space -lt $$danger_zone ]; then
+    elif [ $space -lt $danger_zone ]; then
         echo "[WARNING] Space is getting low. Removing old waveforms..."
         clean_usb
     else
@@ -79,14 +79,20 @@ moveTo_usb(){
     echo "fnum=$fnum"
     cd $fullpath
 
-    if [ $fnum -eq 0 ]; then 
+    if [ $fnum -lt 2 ]; then 
         gzip -c Run${run_num}_${fnum}.txt > $usb/$output_folder/Run${run_num}_${fnum}.txt.gz
     fi 
-
     nice ${dir}/DiRPi lossycompress $run_num $fnum
     sudo mv Run${run_num}_${fnum}.drpw $usb/$output_folder/Run${run_num}_${fnum}.drpw
     nice ${dir}/DiRPi savepulses $run_num $fnum
     sudo mv Run${run_num}_${fnum}.drp $usb/$output_folder/Run${run_num}_${fnum}.drp
+
+#sudo nice mv Run${run_num}_${fnum}.drpw $usb/$output_folder/Run${run_num}_${fnum}.drpw
+    #start of changes that ruin analysis, commented for now
+    # Turn off the pulse-only files to make sure we keep up with data taking
+    #nice ${dir}/DiRPi savepulses $run_num $fnum
+    #sudo nice mv Run${run_num}_${fnum}.drp $usb/$output_folder/Run${run_num}_${fnum}.drp
+    #grep "^T_" Run${run_num}_${fnum}.txt > $usb/$output_folder/Run${run_num}_${fnum}.livedead
     cd -
     rm "$fullpath/$1"
 } 

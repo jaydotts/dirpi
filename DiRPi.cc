@@ -18,6 +18,7 @@ bool debug=false;
 int lossycompress = 0; // Set to 1 if we want to allow lossy compression
 
 unsigned long long int toffset = (unsigned long long int)1660000000000; // Offset to unix time (in ms) when saving
+unsigned long long int filetimeoffset; // Added to all times to get run start time
 
 // Parameters for pulse finding
 int ScaleFactor[2]; // Integer scale factor to apply to each channel, e.g., to negate
@@ -30,6 +31,9 @@ int iStartSearch = 5; // Number of initial samples to skip before looking for pu
 class Event {
 public: 
   unsigned long long int time; // Unix event time in milliseconds
+  unsigned int livetime; // Live time for this event in microseconds
+  unsigned int deadtime; // Dead time for this event in microseconds
+  unsigned int Temperature; // Temperature in millidegree C; zero means no measurement made for this event
   int dRunTime; // Time since start of the run in milliseconds
   int dEvtTime; // Time since previous event in milliseconds
   int rawD[2][65536]; // Raw data from both channels
@@ -70,7 +74,8 @@ public:
   void LossyCompress(); // Compress the waveform data allowing 1 ADC count precision loss
   void UnCompress(); // Uncompress the waveform data from buffers read from data file
   void TestCompress(); // Test that we can compress and uncompress without problems
-  void Display(int minT, int maxT); // Make an event display for the event
+  void Display(int minT, int maxT, int minV, int maxV); // Make a waveform display for the event
+  void WebDisplay(int minT, int maxT, int minV, int maxV); // Make a web-viewable waveform display for the event
 };
 
 void Event::ClearPulses() {
@@ -87,12 +92,15 @@ void Event::ClearPulses() {
 }
 
 void Event::Clear() {
-  evtNum = -1;
-  nSamples = 0;
-  time = 0;
-  TrgCnt[0] = 0;
-  TrgCnt[1] = 0;
-  ClearPulses();
+ evtNum = -1;
+ nSamples = 0;
+ time = 0;
+ livetime = 0;
+ deadtime = 0;
+ Temperature = 0;
+ TrgCnt[0] = 0;
+ TrgCnt[1] = 0;
+ ClearPulses();
 } 
 
 void Event::CopyRaw() {
@@ -319,6 +327,25 @@ void Event::FindPulses() {
 void Event::WritePulses() {
   // Write (append) pulses to the appropriate file name
   // The file is Run${runNum}_pulses.ant and Run${runNum}_keV.ant
+
+  // Energy calibration is done with
+  // Ch1: E(keV) =  35.3 + 0.192*A + 2.98E-05 *  A^2 where A is area 
+  // Ch2: E(keV) = 41.2 + 0.168*A+ 2.8E-05 * A^2 
+  float Calib_A[2], Calib_B[2], Calib_C[2];
+  Calib_A[0] = 41.2;//40.59;//-16.3; //35.3;//-27.5;
+  Calib_B[0] = 0.168;//0.1645;//0.2511;//0.192;//0.2629;
+  Calib_C[0] = 2.8E-5;//2.738E-5;//0;//2.98E-5;//0;
+  Calib_A[1] = 41.2;
+  Calib_B[1] = 0.168;
+  Calib_C[1] = 2.8E-5;
+
+  int nPulse0 = 0;
+  int nPulse1 = 0;
+  for (int i=0; i<Pwidth.size(); i++) { // Loop over pulses
+    if (Pch[i]==0) nPulse0++;
+    if (Pch[i]==1) nPulse1++;  
+  } // Loop over pulses
+
   FILE* outF;
   char fname[100];
   std::string fName;
@@ -328,13 +355,13 @@ void Event::WritePulses() {
     outF = fopen(fName.c_str(),"w");
   else
     outF = fopen(fName.c_str(),"a");
-  for (int i=0; i<Pwidth.size(); i++) { 
+  for (int i=0; i<Pwidth.size(); i++) { // Loop over pulses
     fprintf(outF,"%d ",evtNum);
     fprintf(outF,"%4f ",dRunTime/1000.);
     fprintf(outF,"%4f ",dEvtTime/1000.);
     fprintf(outF,"%d ",int(Pwidth.size()));
-    fprintf(outF,"%d ",nPulses[0]);
-    fprintf(outF,"%d ",nPulses[1]);
+    fprintf(outF,"%d ",nPulse0);
+    fprintf(outF,"%d ",nPulse1);
     fprintf(outF,"%d ",0);
     fprintf(outF,"%d ",0);
     fprintf(outF,"%.4f ",preRMSX10[Pch[i]]/10.); // 9=RMS of this channel in sideband
@@ -346,9 +373,10 @@ void Event::WritePulses() {
     fprintf(outF,"%d ",Pwidth[i]); // 15=pulse width in ns
     fprintf(outF,"%d ",Parea[i]); // 16=pulse area in SPE; not currently calibrated
     float keV = Parea[i]; // Not currently calibrated
-    fprintf(outF,"%.4f ",keV); // 17=pulse area in keV
+    keV = Calib_A[Pch[i]] + Calib_B[Pch[i]]*Parea[i] + Calib_C[Pch[i]]*Parea[i]*Parea[i];
+    fprintf(outF,"%.1f ",keV); // 17=pulse area in keV
     fprintf(outF,"\n");
-  }
+  } // Loop over pulses
   fclose(outF);
   // Next we dump the "keV" formatting of pulse information.
   // It contains the total area per event rather than individual pulse information
@@ -363,13 +391,15 @@ void Event::WritePulses() {
     keVSum[c] = 0.;
     for (int i=0; i<Pwidth.size(); i++) 
      if (Pch[i] == c) {
-      keVSum[c] += Parea[i];
+      float keV = Parea[i]; // Not currently calibrated
+      keV = Calib_A[Pch[i]] + Calib_B[Pch[i]]*Parea[i] + Calib_C[Pch[i]]*Parea[i]*Parea[i];
+      keVSum[c] += keV;
      }
   }
   fprintf(outF,"%d ",runNum); // 1=run number
   fprintf(outF,"%d ",evtNum); // 2=event number
-  fprintf(outF,"%.4f ",keVSum[0]); // 3=Total energy in channel 1
-  fprintf(outF,"%.4f ",keVSum[1]); // 4=Total energy in channel 2
+  fprintf(outF,"%.1f ",keVSum[0]); // 3=Total energy in channel 1
+  fprintf(outF,"%.1f ",keVSum[1]); // 4=Total energy in channel 2
   fprintf(outF,"0 "); // 5=Total energy in channel 3
   fprintf(outF,"0 "); // 6=Total energy in channel 4
   fprintf(outF,"%.4f ",preRMSX10[0]/10.); // 7=RMS in sideband for channel 1
@@ -377,6 +407,70 @@ void Event::WritePulses() {
   fprintf(outF,"0 "); // 9=RMS in sideband for channel 3
   fprintf(outF,"0 "); // 10=RMS in sideband for channel 4
   fprintf(outF,"\n");
+  fclose(outF);
+  // Next we dump the "dirpipulses" formatting of pulse information.
+  // It contains additional event wide information and individual pulse information
+  sprintf(fname,"Run%d_dirpipulses.ant",runNum);
+  fName = fname;
+  if (evtNum==0)
+    outF = fopen(fName.c_str(),"w");
+  else
+    outF = fopen(fName.c_str(),"a");
+  for (int i=0; i<Pwidth.size(); i++) { // Loop over pulses 
+    // Event wide information saved in each pulse entry
+    fprintf(outF,"%d ",runNum); // 1=run number
+    fprintf(outF,"%d ",evtNum); // 2=event number
+    fprintf(outF,"%.3f ",dRunTime/1000.); // 3=Time since start of run
+    fprintf(outF,"%.3f ",dEvtTime/1000.); // 4=Time since previous event
+    fprintf(outF,"%d ",int(Pwidth.size())); // 5=Number of pulses
+    fprintf(outF,"%d ",nPulse0); // 6=Number of CH1 pulses
+    fprintf(outF,"%d ",nPulse1); // 7=Number of CH2 pulses
+    fprintf(outF,"%.2f ",preRMSX10[0]/10.); // 8=RMS in sideband for channel 1
+    fprintf(outF,"%.2f ",preRMSX10[1]/10.); // 9=RMS in sideband for channel 2
+    fprintf(outF,"0 "); // 10=Pedestal in sideband for channel 1
+    fprintf(outF,"0 "); // 11=Pedestal in sideband for channel 2
+    fprintf(outF,"0 "); // 12=Area in time a of channel 1
+    fprintf(outF,"0 "); // 13=Area in time b of channel 1
+    fprintf(outF,"0 "); // 14=Area in time c of channel 1
+    fprintf(outF,"0 "); // 15=Area in time d of channel 1
+    fprintf(outF,"0 "); // 16=Area in time a of channel 2
+    fprintf(outF,"0 "); // 17=Area in time b of channel 2
+    fprintf(outF,"0 "); // 18=Area in time c of channel 2
+    fprintf(outF,"0 "); // 19=Area in time d of channel 2
+    // Pulse specific information 
+    fprintf(outF,"%d ",Pch[i]+1); // 20=channel number
+    fprintf(outF,"%d ",Pipulse[i]); // 21=pulsenum within waveform for this channel
+    fprintf(outF,"%d ",Pt[i]); // 22=start time of pulse within waveform in ns
+    fprintf(outF,"%d ",Parea[i]); // 23=pulse area in nVs
+    fprintf(outF,"%d ",PpeakV[i]); // 24=pulse peak height in mV
+    fprintf(outF,"%d ",Pwidth[i]); // 25=pulse width in ns
+    float keV = Parea[i]; // Not currently calibrated
+    keV = Calib_A[Pch[i]] + Calib_B[Pch[i]]*Parea[i] + Calib_C[Pch[i]]*Parea[i]*Parea[i];
+    fprintf(outF,"%.1f ",keV); // 26=pulse energy in keV
+    // Find the time to the nearest pulse in the same channel
+    int dtmin = 65536; // Start with max possible
+    int dt;
+    for (int j=0; j<Pwidth.size(); j++) 
+      if (i != j && Pch[j] == Pch[i]) {
+        dt = Pt[i] - Pt[j];
+        if (abs(dt)<dtmin) dtmin = dt;
+      }
+    fprintf(outF,"%d ",dtmin); // 27=time to nearest other pulse in channel
+    // Find the time to the nearest pulse in the other channel
+    dtmin = 65536; // Start with max possible
+    for (int j=0; j<Pwidth.size(); j++) 
+      if (i != j && Pch[j] != Pch[i]) {
+        dt = Pt[i] - Pt[j];
+        if (abs(dt)<dtmin) dtmin = dt;
+      }
+    fprintf(outF,"%d ",dtmin); // 28=time to nearest pulse in other channel
+    if (abs(dtmin)>3)
+      fprintf(outF,"0 "); // 29=coinc flag false
+    else
+      fprintf(outF,"1 "); // 29=coinc flag true
+    fprintf(outF,"0"); // 30=Quality flag
+    fprintf(outF,"\n");
+  } // Loop over pulses
   fclose(outF);
 } // Event::WritePulses
 
@@ -438,6 +532,9 @@ void Event::Dump() {
   cout << "dRunTime "<<runNum<< " "<<evtNum<<" "<<dRunTime<<"\n";
   cout << "dEvtTime "<<runNum<< " "<<evtNum<<" "<<dEvtTime<<"\n";
   cout << "nSamples "<<runNum<< " "<<evtNum<<" "<<nSamples<<"\n";
+  cout << "livetime "<<runNum<< " "<<evtNum<<" "<<livetime<<"\n";
+  cout << "deadtime "<<runNum<< " "<<evtNum<<" "<<deadtime<<"\n";
+  cout << "temperature "<<runNum<< " "<<evtNum<<" "<<Temperature<<"\n";
   cout << "min0 "<<runNum<< " "<<evtNum<<" "<<dMin[0]<<"\n";
   cout << "min1 "<<runNum<< " "<<evtNum<<" "<<dMin[1]<<"\n";
   cout << "max0 "<<runNum<< " "<<evtNum<<" "<<dMax[0]<<"\n";
@@ -521,17 +618,17 @@ void Event::UnCompress() {
   dsize=0; dsave=0;
   for (int c=0; c<2; c++) { // Channel loop
     unsigned int nbuf = ChanBuf[c].size();
-  if (debug) cout << "Uncompressing e="<<evtNum<<" c="<<c<<" nbuf="<<nbuf<<"\n";
+    if (debug) cout << "Uncompressing e="<<evtNum<<" c="<<c<<" nbuf="<<nbuf<<"\n";
     unsigned int index = 0; // Index into waveform
     unsigned int i = 0; // Index into buffer
     while (i<nbuf) { // Loop through buffer
       d = ChanBuf[c].at(i); // Get next byte
-  if (debug) cout << "i="<<i<<" d="<<(int)d<<"\n";
+      if (debug) cout << "i="<<i<<" d="<<(int)d<<"\n";
       i++;
       if (d == 255) { // Sequence?
         dsize = 0; // Handle issues at the last sample
         if (i<nbuf) dsize = ChanBuf[c].at(i);
-  if (debug) cout << "dsize="<<(int)dsize<<"\n";
+        if (debug) cout << "dsize="<<(int)dsize<<"\n";
         i++;
         while (dsize>0) {
           rawD[c][index] = dsave;
@@ -566,7 +663,7 @@ void Event::TestCompress() {
         cout << "Compress error: Evt="<<evtNum << " ch=" << c << " i=" << i << " raw=" << rawD[c][i] << " D=" << D[c][i] << "\n";
 } // Event::TestCompress
 
-void Event::Display(int minT, int maxT) {
+void Event::Display(int minT, int maxT, int minV, int maxV) {
   // Make an event display. 
   // To avoid bogging the code down with plotting tools,
   // we just write the waveform data to a temporary file
@@ -579,10 +676,27 @@ void Event::Display(int minT, int maxT) {
     fprintf(outF,"%d %d %d\n",i,rawD[0][i],rawD[1][i]);
   fclose(outF);
   char command[100];
-  sprintf(command,"DiRPiEventDisplay.csh %d %d %d %d",runNum,evtNum,minT,maxT);
+  sprintf(command,"DiRPiEventDisplay.csh %d %d %d %d %d %d",runNum,evtNum,minT,maxT,minV,maxV);
   system(command);
-  DumpPulses();
+  //DumpPulses();
 } // Event::Display
+
+void Event::WebDisplay(int minT, int maxT, int minV, int maxV) {
+  // Make a web-viewable event display. 
+  // To avoid bogging the code down with plotting tools,
+  // we just write the waveform data to a temporary file
+  // and call a plotter script.
+  FILE* outF;
+  std::string fName;
+  fName = "tmpplot.ant";
+  outF = fopen(fName.c_str(),"w");
+  for (unsigned int i=0; i<nSamples; i++)
+    fprintf(outF,"%d %d %d\n",i,rawD[0][i],rawD[1][i]);
+  fclose(outF);
+  char command[100];
+  sprintf(command,"DiRPiMonDisplay.csh %d %d %d %d %d %d",runNum,evtNum,minT,maxT,minV,maxV);
+  system(command);
+} // Event::WebDisplay
 
 class Run {
 public: 
@@ -611,7 +725,7 @@ public:
   vector<Event> Evts; // All events
   ifstream inF; // Used for writing .drp files
   ofstream outF; // Used for reading .drp files
-  Run() {Clear();}
+  Run() {Clear(); Evts.reserve(100);}
   void Clear(); // Clear all information
   void ClearEvts(); // Delete all events, but don't erase other information.
   void ClearPulses(); // Delete pulses from all events, but don't erase other information.
@@ -625,6 +739,9 @@ public:
   void ReadMeanRMSBlock(int e); // Read a mean&rms block
   void ReadWaveformBlock(int e); // Read a waveform block
   void ReadPulseBlock(int e); // Read a pulse block
+  void ReadLivetimeBlock(int e); // Read a live/deadtime block
+  void ReadTemperatureBlock(int e); // Read a temperature block
+  void ReadTrigCountBlock(int e); // Read a trigger primitive count block
   void ReadEventBlock(); // Read an event block
   void Proc(); // Process all events in run
   void WriteDRP(int fnum, bool _w); // Write to Data{fnum}.drp(w) containing pulses and optionally waveforms
@@ -633,7 +750,9 @@ public:
   void WritePulses(); // Write (append) the pulses to the appropriate files
   void DumpPulses(); // Write the pulses to the screen
   void Dump(); // Write event information to the screen
-  void Display(int evtnum, int minT, int maxT); // Make an event display for the passed event number
+  void Display(int evtnum, int minT, int maxT, int minV, int maxV); // Make an event display for the passed event number
+  void WebDisplay(int evtnum, int minT, int maxT, int minV, int maxV); // Make a web-viewable waveform display for the passed event number
+  void Monitor(int _fNum, bool web); // Dump monitoring variables for the full run to stdout
 };
 
 void Run::ClearEvts() {
@@ -715,6 +834,20 @@ void Run::ReadTXT(int fnum) {
     //         <<" prevdRunTime="<<prevdRunTime<<"\n";
     prevdRunTime = Evt.dRunTime; // Save the time since the previous event
   } // TIME line
+  if (strncmp(line.c_str(),"T_LIVE ",7)==0) { // Livetime line
+    string word = line.substr(7,line.length()); // Cut off "keyword "
+    int _evt;
+    unsigned int _livetime;
+    sscanf(word.c_str(),"%d %d",&_evt,&_livetime);
+    Evt.livetime = _livetime;
+  } // livetime line
+  if (strncmp(line.c_str(),"T_DEAD ",7)==0) { // Deadtime line
+    string word = line.substr(7,line.length()); // Cut off "keyword "
+    int _evt;
+    unsigned int _deadtime;
+    sscanf(word.c_str(),"%d %d",&_evt,&_deadtime);
+    Evt.deadtime = _deadtime;
+  } // deadtime line
   if (strncmp(line.c_str(),"DATA: ",6)==0) { // DATA: line
     string word = line.substr(6,line.length());  // Cut off "DATA: "
     sscanf(word.c_str(),"%d %d %d %d",&evt, &iAddr, &C1, &C2);
@@ -767,15 +900,15 @@ void Run::ReadTXT(int fnum) {
     if (_trgCh2 == 0) TrgCh2 = false;
     if (_trgCh2 == 1) TrgCh2 = true;
   } // TrgCh2 line
-  if (strncmp(line.c_str(),"TrgCnt1 ",8)==0) { // TrgCnt1 line
-    string word = line.substr(8,line.length()); // Cut off "TrgCnt1 "
+  if (strncmp(line.c_str(),"Trg1Cnt ",8)==0) { // Trg1Cnt line
+    string word = line.substr(8,line.length()); // Cut off "Trg1Cnt "
     int _count;
     sscanf(word.c_str(),"%d",&_count);
     Evt.TrgCnt[0]=_count;
     if (Evts.size()>0) Evts[Evts.size()-1].TrgCnt[0]=_count;
   } // TrgCnt2 line
-  if (strncmp(line.c_str(),"TrgCnt2 ",8)==0) { // TrgCnt2 line
-    string word = line.substr(8,line.length()); // Cut off "TrgCnt2 "
+  if (strncmp(line.c_str(),"Trg2Cnt ",8)==0) { // Trg2Cnt line
+    string word = line.substr(8,line.length()); // Cut off "Trg2Cnt "
     int _count;
     sscanf(word.c_str(),"%d",&_count);
     Evt.TrgCnt[1]=_count;
@@ -822,6 +955,7 @@ void Run::ReadTXT(int fnum) {
     float _temp;
     sscanf(word.c_str(),"%f",&_temp);
     Temperature = _temp;
+    Evt.Temperature = (unsigned int) (Temperature*1000);
   } // TEMP line
   if (line[0] == 0) {
     done = true;
@@ -891,9 +1025,10 @@ void Run::WriteDRP(int fnum, bool _w) {
   // Skip trigger primitive counts
   // Mean and RMS:
   buf[0]='m';
-  outF.write(buf,1);
-  ibyte = (char) 0;
-  outF.write((char*)&ibyte,sizeof(ibyte));
+  buf[1]='0';
+  outF.write(buf,2);
+//  ibyte = (char) 0;
+//  outF.write((char*)&ibyte,sizeof(ibyte));
   ibyte = (char) Evts[e].preMeanX10[0]/10;
   outF.write((char*)&ibyte,sizeof(ibyte));
   ibyte=(char)((4*Evts[e].preRMSX10[0])/10);
@@ -901,9 +1036,10 @@ void Run::WriteDRP(int fnum, bool _w) {
   ibyte = (char) Evts[e].mostProb[0];
   outF.write((char*)&ibyte,sizeof(ibyte));
   buf[0]='m';
-  outF.write(buf,1);
-  ibyte = (char) 1;
-  outF.write((char*)&ibyte,sizeof(ibyte));
+  buf[1]='1';
+  outF.write(buf,2);
+//  ibyte = (char) 1;
+//  outF.write((char*)&ibyte,sizeof(ibyte));
   ibyte = (char) Evts[e].preMeanX10[1]/10;
   outF.write((char*)&ibyte,sizeof(ibyte));
   ibyte=(char)((4*Evts[e].preRMSX10[1])/10);
@@ -928,7 +1064,29 @@ void Run::WriteDRP(int fnum, bool _w) {
   // Skip I2C block
   // Skip alarm block
   // Skip IO block
-  // Skip deadtime block
+  // Write the live/dead-time block
+  buf[0]='L';
+  outF.write(buf,1);
+  ival = (unsigned int) Evts[e].livetime;
+  outF.write((char*)&ival,sizeof(ival));
+  ival = (unsigned int) Evts[e].deadtime;
+  outF.write((char*)&ival,sizeof(ival));
+  // Write the temperature block
+  if (Temperature > 0) {
+    buf[0]='T';
+    outF.write(buf,1);
+    ival = (unsigned int) Evts[e].Temperature;
+    outF.write((char*)&ival,sizeof(ival));
+  }
+  // Write the trigger primitive count information
+  buf[0]='t'; buf[1]=0;
+  outF.write(buf,2);
+  ival = (unsigned int) Evts[e].TrgCnt[0];
+  outF.write((char*)&ival,sizeof(ival));
+  buf[0]='t'; buf[1]=1;
+  outF.write(buf,2);
+  ival = (unsigned int) Evts[e].TrgCnt[1];
+  outF.write((char*)&ival,sizeof(ival));
   // Write the pulse information block
   for (int ip=0; ip<int(Evts[e].Pwidth.size()); ip++) { // Pulse loop
     // Write a pulse header
@@ -1034,7 +1192,9 @@ void Run::ReadRunLine() { // Read a Run header line
   int _runnum,_fnum; // We ignore these for now
   sscanf(line,"%d %d %d %d",&_runnum,&_fnum,&clkspeed,&memdepth);
   if (debug) cout << "Read run="<<_runnum<<" vs "<<runNum<<" _fnum="<<_fnum<<"\n";
-  inF.read(reinterpret_cast<char *>(&time),sizeof(time)); // Read the run start time
+  unsigned long long int filetime; // Unix event time in milliseconds
+  inF.read(reinterpret_cast<char *>(&filetime),sizeof(filetime)); // Read the run start time
+  if (time == 0) time = filetime; // Set the start of run time if it is not already set
 } // Read a Run header line
 
 void Run::ReadMeanRMSBlock(int e) { // Read a mean&rms block
@@ -1089,7 +1249,7 @@ void Run::ReadPulseBlock(int e) { // Read a pulse block
   // Read channel number
   inF.read(reinterpret_cast<char *>(&ibyte),sizeof(ibyte));
   int chan = (int)ibyte;
-if (debug) cout << "ReadPulseBlock e="<<e<<" c="<<chan<<"\n";
+  if (debug) cout << "ReadPulseBlock e="<<e<<" c="<<chan<<"\n";
   if (chan == 48) chan = 0; // Correct or character format if needed
   if (chan == 49) chan = 1; // Correct or character format if needed
   if (chan<0 || chan>1) {
@@ -1139,6 +1299,37 @@ if (debug) cout << "ReadPulseBlock e="<<e<<" c="<<chan<<"\n";
   if (debug) cout << "Done reading pulse block.\n";
 } // Read a pulse block
 
+void Run::ReadLivetimeBlock(int e) { // Read a live/dead-time block
+  // This is called after finding a "L" special character.
+  unsigned int ival;
+  inF.read(reinterpret_cast<char *>(&ival),sizeof(ival));
+  Evts[e].livetime = ival;
+  inF.read(reinterpret_cast<char *>(&ival),sizeof(ival));
+  Evts[e].deadtime = ival;
+  if (debug) cout << "Done reading live/dead-time block.\n";
+} // Read a live/dead-time block
+
+void Run::ReadTemperatureBlock(int e) { // Read a temperature block
+  // This is called after finding a "T" special character.
+  unsigned int ival;
+  inF.read(reinterpret_cast<char *>(&ival),sizeof(ival));
+  Evts[e].Temperature = (unsigned int) ival;
+} // Read a temperature block
+
+void Run::ReadTrigCountBlock(int e) { // Read a trigger count block
+  // This is called after finding a "t" special character.
+  char ibyte;
+  // Read channel number
+  inF.read(reinterpret_cast<char *>(&ibyte),sizeof(ibyte));
+  int chan = (int)ibyte;
+  if (chan<0) chan=0;
+  if (chan>1) chan=1;
+  // Read trigger primitive count
+  unsigned int ival;
+  inF.read(reinterpret_cast<char *>(&ival),sizeof(ival));
+  Evts[e].TrgCnt[chan] = ival;
+} // Read a temperature block
+
 void Run::ReadEventBlock() { // Read an event block
   Event evt;
   evt.runNum = runNum;
@@ -1170,6 +1361,12 @@ void Run::ReadEventBlock() { // Read an event block
       ReadWaveformBlock(e);
     else if (buf[0]=='p')
       ReadPulseBlock(e);
+    else if (buf[0]=='L')
+      ReadLivetimeBlock(e);
+    else if (buf[0]=='T')
+      ReadTemperatureBlock(e);
+    else if (buf[0]=='t')
+      ReadTrigCountBlock(e);
   } // Read blocks to end of event
   Evts[e].UnCompress();
 } // Read an event block
@@ -1202,7 +1399,6 @@ void Run::ReadDRP(int fnum) {
   // Skip the configuration blocks
   else if (buf[0] == 'E') {
     ReadEventBlock();
-    if (time == 0) time = Evts[0].time; // Update run time
   }
   // Skip I2C block
   // Skip alarm block
@@ -1237,9 +1433,14 @@ void Run::WritePulses() {
   } // event loop
 } // Run::WritePulses
 
-void Run::Display(int evtnum, int minT, int maxT) {
+void Run::Display(int evtnum, int minT, int maxT, int minV, int maxV) {
   if (evtnum>=0 && evtnum<int(Evts.size()))
-    Evts[evtnum].Display(minT, maxT);
+    Evts[evtnum].Display(minT, maxT, minV, maxV);
+}
+
+void Run::WebDisplay(int evtnum, int minT, int maxT, int minV, int maxV) {
+  if (evtnum>=0 && evtnum<int(Evts.size()))
+    Evts[evtnum].WebDisplay(minT, maxT, minV, maxV);
 }
 
 void Run::DumpPulses() {
@@ -1282,6 +1483,44 @@ void Run::Dump() {
   } // event loop
 }
 
+void Run::Monitor(int _fNum, bool web) {
+  // Dump monitoring information to the screen
+  // Two types of monitoring information is recorded, a human readable list and a compressed string.
+  // The human readable list is made by writing lines with
+  // MON KEYWORD runNum fNum values
+  // where KEYWORD cycles through various observables.
+  int firstEvt=0;
+  int lastEvt=0;
+  int totNPulses=0;
+  int dtime=1; // Time in ms
+  int EvtRate=0; // Number of events per minute
+  int PulseRate=0; // Number of pulses per minute
+  if (Evts.size()>0) {
+    firstEvt = Evts[0].evtNum;
+    lastEvt = Evts[Evts.size()-1].evtNum;
+    for (unsigned int i=0; i<Evts.size(); i++)
+      totNPulses += Evts[i].Pt.size();
+    dtime = Evts[Evts.size()-1].dRunTime; // Time in ms
+  }
+  EvtRate = int(0.5+(lastEvt-firstEvt)*60000./dtime); // Evts per minute
+  PulseRate = int(0.5+totNPulses*60000./dtime); // Evts per minute
+  cout << "MON starttime "<<runNum<<" "<<_fNum<<" "<<time<<'\n'; // Time of the start of this run (or file)
+  cout << "MON FirstEvt "<<runNum<<" "<<_fNum<<" "<<firstEvt<<'\n'; // First event number seen
+  cout << "MON LastEvt "<<runNum<<" "<<_fNum<<" "<<lastEvt<<'\n'; // Last event number seen
+  cout << "MON NPulses "<<runNum<<" "<<_fNum<<" "<<totNPulses<<'\n'; // Number of pulses in full run (or file)
+  cout << "MON dtime "<<runNum<<" "<<_fNum<<" "<<dtime<<'\n'; // Time between first and last event in ms
+  cout << "MON EvtRate "<<runNum<<" "<<_fNum<<" "<<EvtRate<<'\n'; // Number of events per minute
+  cout << "MON PulseRate "<<runNum<<" "<<_fNum<<" "<<PulseRate<<'\n'; // Number of pulses per minute
+  if (web) {
+    char cmd[1000];
+    std::string Cmd;
+    sprintf(cmd,"curl -s 'http://dstuart.physics.ucsb.edu/cgi-bin/SaveDiRPiMon?MON_%d_%d_%llu_%d_%d_%d_%d_%d_%d'",
+      runNum,_fNum,time,firstEvt,lastEvt,totNPulses,dtime,EvtRate,PulseRate);
+    Cmd = cmd;
+    system(Cmd.c_str());
+  }
+} // Run::Monitor
+
 int main(int argc, char *argv[])
 {
   // Set defaults for pulse finding
@@ -1312,7 +1551,6 @@ int main(int argc, char *argv[])
   sscanf(argv[3],"%d",&fnum);
   // Read and process the command from the command line parameters
   if (strncmp(argv[1],"compress",13)==0) { // Compress the file
-    //cout << "Compressing Run"<<rnum<<"_"<<fnum<<".txt\n";
     lossycompress = 0;
     Run r;
     r.runNum = rnum;
@@ -1322,23 +1560,26 @@ int main(int argc, char *argv[])
     return 0;
   } // Compress the file
   if (strncmp(argv[1],"lossycompress",13)==0) { // Compress the file
-    //cout << "LossyCompressing Run"<<rnum<<"_"<<fnum<<".txt\n";
     lossycompress = 1;
     Run r;
     r.runNum = rnum;
     r.ReadTXT(fnum);
     r.Proc();
-    //r.Dump();
     r.WriteDRP(fnum,true);
+    r.WriteDRP(fnum,false);
+    if (fnum%10 == 0)
+      r.Monitor(fnum,true);
     return 0;
   } // Compress the file
   if (strncmp(argv[1],"savepulses",13)==0) { // Save only pulse information
     //cout << "Saving pulses for Run"<<rnum<<"_"<<fnum<<".txt\n";
+/*
     Run r;
     r.runNum = rnum;
     r.ReadTXT(fnum);
     r.Proc();
     r.WriteDRP(fnum,false);
+*/
     return 0;
   } // Compress the file
   if (strncmp(argv[1],"uncompress",13)==0) { // Compress the file
@@ -1352,6 +1593,7 @@ int main(int argc, char *argv[])
     return 0;
   } // Compress the file
   if (strncmp(argv[1],"pulses",6)==0) { // Pulses
+    // Write pulse files
     if (fnum<0) { // Negative fnum implies loop
       Run r;
       r.Clear();
@@ -1364,7 +1606,6 @@ int main(int argc, char *argv[])
       } // file loop
     } // Negative fnum implies loop
     else { // Positive fnum
-      //cout << "Writing pulse information from Run"<<rnum<<"_"<<fnum<<".drp\n";
       Run r;
       r.runNum = rnum;
       r.ReadDRP(fnum);
@@ -1379,7 +1620,6 @@ int main(int argc, char *argv[])
       r.Clear();
       r.runNum = rnum;
       for (int ifnum=0; ifnum<=abs(fnum); ifnum++) { // file loop
-        //cout << "Writing pulse information from Run"<<rnum<<"_"<<ifnum<<".drp\n";
         r.ReadDRP(ifnum);
         r.ClearPulses();
         r.Proc();
@@ -1388,7 +1628,6 @@ int main(int argc, char *argv[])
       } // file loop
     } // Negative fnum implies loop
     else { // Positive fnum
-      //cout << "Writing pulse information from Run"<<rnum<<"_"<<fnum<<".drp\n";
       Run r;
       r.runNum = rnum;
       r.ReadDRP(fnum);
@@ -1399,31 +1638,82 @@ int main(int argc, char *argv[])
     } // Positive fnum
     return 0;
   } // FindPulses
-  if (strncmp(argv[1],"display",13)==0) { // Display
-    if (argc < 6) {
-      cerr << "Must pass event number, min time, and max time for display\n";
+  if (strncmp(argv[1],"display",7)==0) { // Display
+    if (argc < 8) {
+      cerr << "Must pass event number, min time, max time, min voltage, and max voltage for display\n";
+      cout << "1="<<argv[1]<<"\n";
+      cout << "2="<<argv[2]<<"\n";
+      cout << "3="<<argv[3]<<"\n";
+      cout << "4="<<argv[4]<<"\n";
+      cout << "5="<<argv[5]<<"\n";
+      cout << "6="<<argv[6]<<"\n";
+      cout << "7="<<argv[7]<<"\n";
+      cout << "8="<<argv[8]<<"\n";
     }
     else {
       int evtnum;
       sscanf(argv[4],"%d",&evtnum);
-      int minT, maxT;
+      int minT, maxT, minV, maxV;
       sscanf(argv[5],"%d",&minT);
       sscanf(argv[6],"%d",&maxT);
+      sscanf(argv[7],"%d",&minV);
+      sscanf(argv[8],"%d",&maxV);
       if (minT==0 && maxT==0) {
 	     minT = 0;
 	     maxT = 65536;
       }
-      cout << "Making event display for event "<<evtnum<<" from Run"<<rnum<<"_"<<fnum<<".drp\n";
+      if (minV==0 && maxV==0) {
+	     minV = 0;
+	     maxV = 256;
+      }
       Run r;
       r.runNum = rnum;
       r.ReadDRP(fnum);
       r.ClearPulses(); // Remove any pre-existing pulses. They will be regenerated.
       r.Proc();
-      r.Display(evtnum,minT,maxT);
+      r.Display(evtnum,minT,maxT,minV,maxV);
       r.Clear();
     }
     return 0;
   } // Display
+  if (strncmp(argv[1],"webdisplay",10)==0) { // WebDisplay
+    if (argc < 8) {
+      cerr << "Must pass event number, min time, max time, min voltage, and max voltage for display\n";
+      cout << "1="<<argv[1]<<"\n";
+      cout << "2="<<argv[2]<<"\n";
+      cout << "3="<<argv[3]<<"\n";
+      cout << "4="<<argv[4]<<"\n";
+      cout << "5="<<argv[5]<<"\n";
+      cout << "6="<<argv[6]<<"\n";
+      cout << "7="<<argv[7]<<"\n";
+      cout << "8="<<argv[8]<<"\n";
+    }
+    else {
+      int evtnum;
+      sscanf(argv[4],"%d",&evtnum);
+      int minT, maxT, minV, maxV;
+      sscanf(argv[5],"%d",&minT);
+      sscanf(argv[6],"%d",&maxT);
+      sscanf(argv[7],"%d",&minV);
+      sscanf(argv[8],"%d",&maxV);
+      if (minT==0 && maxT==0) {
+	     minT = 0;
+	     maxT = 65536;
+      }
+      if (minV==0 && maxV==0) {
+	     minV = 0;
+	     maxV = 256;
+      }
+      Run r;
+      r.runNum = rnum;
+      r.ReadDRP(fnum);
+      r.ClearPulses(); // Remove any pre-existing pulses. They will be regenerated.
+      r.Proc();
+      r.WebDisplay(evtnum,minT,maxT,minV,maxV);
+      r.Clear();
+    }
+    return 0;
+  } // WebDisplay
   if (strncmp(argv[1],"dump",4)==0) { // Dump
     Run r;
     r.runNum = rnum;
@@ -1432,6 +1722,14 @@ int main(int argc, char *argv[])
     r.Clear();
     return 0;
   } // Dump
+  if (strncmp(argv[1],"monitor",7)==0) { // Monitor information
+    Run r;
+    r.runNum = rnum;
+    r.ReadDRP(fnum);
+    r.Monitor(fnum,false);
+    r.Clear();
+    return 0;
+  } // Monitor
   // If we get here, there was an unexpected command
   cerr << "Unexpected command parameters. Nothing done.\n";
   return 1;

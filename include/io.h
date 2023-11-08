@@ -15,6 +15,7 @@ void ToggleSlowClock();
 void reset_MUX(); 
 
 std::string getTime(); 
+std::string getTimeus(); 
 
 bool isfile (const std::string& name); 
 

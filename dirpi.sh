@@ -1,6 +1,7 @@
 #!/bin/bash
 #ID=$(head -n 1 ~/dirpi/metadata/ID.txt)
-ID=12
+pwd
+ID=14
 cd "/home/dirpi$ID/dirpi/"
 PIDFILE="/home/dirpi$ID/dirpi/run.pid"
 
@@ -11,6 +12,7 @@ create_pidfile () {
 remove_pidfile () {
   [ -f "$PIDFILE" ] && rm "$PIDFILE"
 }
+
 
 previous_instance_active () {
   local prevpid
@@ -92,15 +94,18 @@ esac
 manager () {
   case $1 in 
     start)
+      ps aux | grep main
+      ls -l run.pid
       if previous_instance_active
       then 
         date +'PID: $$ Previous instance is still active at %H:%M:%S, aborting ... '
+        return 
       else 
-      trap remove_pidfile EXIT
+      #trap remove_pidfile EXIT
       create_pidfile
       DAQ start
       remove_pidfile
-    #  source "/home/dirpi$ID/dirpi/check_network.sh"
+   #   source "/home/dirpi$ID/dirpi/check_network.sh"
       fi
       ;;
 
@@ -124,6 +129,7 @@ manager () {
           date +"PID: $$ Process terminated at %H:%M:%S"
         fi 
       else 
+ID=$(head -n 1 metadata/ID.txt)
         date +"[%H:%M:%S] Process exited successfully."
       fi 
       ;;

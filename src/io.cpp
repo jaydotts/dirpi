@@ -74,6 +74,17 @@ string getTime(){
     return str; 
 }
 
+string getTimeus(){
+    /*
+    Returns UNIX time in ms as a string
+    */
+    const auto us = std::chrono::duration_cast< std::chrono::microseconds >(
+    std::chrono::system_clock::now().time_since_epoch());
+    std::string str(std::to_string(us.count()));
+    return str; 
+}
+
+
 bool isfile (const std::string& name) {
   struct stat buffer;   
   return (stat (name.c_str(), &buffer) == 0); 

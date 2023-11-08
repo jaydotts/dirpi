@@ -67,7 +67,7 @@ void Data::Read(){
     }
 }
 
-void Data::Write(const char *fname){
+void Data::Write(const char *fname, int64_t tLive, int64_t tDead, int64_t evtTime){
     // Make buffers for waveform data
 
     FILE *OutputFile;
@@ -87,8 +87,13 @@ void Data::Write(const char *fname){
     } 
     
     if(config->record_data){
+//        int64_t t0;
+//        sscanf(getTimeus().c_str(), "%llu", &t0);
         fprintf(OutputFile,(
-            "TIME " + getTime()+"\n"+
+//            "TIME " + std::to_string(t0)+"\n"+
+            "TIME " + std::to_string(evtTime/1000)+"\n"+
+            "T_LIVE " + std::to_string(eventNum) + " " + std::to_string(tLive)+"\n"+
+            "T_DEAD " + std::to_string(eventNum) + " " + std::to_string(tDead)+"\n"+
             "TEMP " + std::to_string(tmp_sensor.get_temp()) + "\n" +
             "Trg1Cnt " + std::to_string(trg1_count) + "\n" +
             "Trg2Cnt " + std::to_string(trg2_count)+ "\n").c_str());}
