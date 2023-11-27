@@ -94,6 +94,7 @@ Configuration* load_configs(std::string CONFIG_FILE_PATH){
         .trg2 = reader.GetBoolean("trigger","TrgCh2",0),
         .sftrg = reader.GetBoolean("trigger","sftrg",0),
         .extrg = reader.GetBoolean("trigger","extrg",1),
+        .wait_time_us = reader.GetInteger("trigger","wait",1),
         .PotValCh1 = reader.GetInteger("components","PotValCh1",255),
         .PotValCh2 = reader.GetInteger("components","PotValCh2",255),
         .PotValCh3 = reader.GetInteger("components","PotValCh3",255),

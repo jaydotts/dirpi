@@ -13,6 +13,8 @@
 #include <string> 
 #include <iostream>
 #include <fstream>
+#include <thread>
+#include <chrono>
 
 using namespace std; 
 
@@ -86,8 +88,8 @@ fprintf(hack_output, "getTimeus test is %llu %llu %llu in 1M loops\n", t2, tstar
 fclose(hack_output);
 // End of hack test
 */
-
-t2 = 0;
+        std::chrono::microseconds remainingWaitTime(config->wait_time_us); // Desired total wait time
+        t2 = 0;
 
         sscanf(getTimeus().c_str(), "%llu", &t1);
         while(!isfile(".stop") & (file_count < 2+max_files)){ 
@@ -121,12 +123,33 @@ t2 = 0;
 
             // wait for OE* to go high -> indicates that 
             // trigger runout has gone high 
+            ReadPin(OEbar);
+            ReadPin(OEbar);
+            ReadPin(OEbar);
+            while(ReadPin(OEbar)==0); 
             while(ReadPin(OEbar)==1); 
+         //   std::cout<<config->wait_time_us<<std::endl;
+            if( remainingWaitTime > std::chrono::microseconds(5000) ){
+                //for FEL we should delay by 16.625 ms 
+             //   std::cout<< "delaying trigger"<<std::endl;
+                //reset data acquisition so data will continue to be read into the SRAM
+                std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+                RAM.enable_sampling(); //has a 4000 us delay already
+                std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+                std::chrono::microseconds elapsedTime = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+            
+                if (elapsedTime < remainingWaitTime) {
+                    std::this_thread::sleep_for(remainingWaitTime -elapsedTime);
+                } else {
+                    std::cout << "The first command took longer than the desired total wait time.\n";
+                }
+                software_trigger();
+            }
+            digitalWrite(DAQHalt,1);
+            digitalWrite(DAQHalt,1);
+            digitalWrite(DAQHalt,1);
             sscanf(getTimeus().c_str(), "%llu", &t1);
             tLive=t1 -t2;
-            digitalWrite(DAQHalt,1);
-            digitalWrite(DAQHalt,1);
-            digitalWrite(DAQHalt,1);
             RunData.Read(); 
             RunData.Write(
                 (output_folder+"/"+output_fname).c_str(), tLive, tDead, t1); 
