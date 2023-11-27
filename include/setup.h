@@ -43,6 +43,7 @@ struct Configuration{
     bool trg2; 
     bool sftrg;
     bool extrg;
+    long wait_time_us;
     long PotValCh1;
     long PotValCh2;
     long PotValCh3; 
